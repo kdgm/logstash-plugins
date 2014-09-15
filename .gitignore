@@ -1,0 +1,3 @@
+logstash.s3
+*.log
+sincedb_s3
