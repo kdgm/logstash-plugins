@@ -43,17 +43,14 @@ module LogStash
 
     def type(default_type)
       let(:default_type) { default_type }
-      puts "Setting default type: #{default_type}"
     end
     
     def tags(*default_tags)
       let(:default_tags) { default_tags }
-      puts "Setting default tags: #{default_tags}"
     end
 
     def fields(default_fields)
       let(:default_fields) { default_fields }
-      puts "Setting default fields: #{default_fields}"
     end
 
     def sample(sample_event, &block)
