@@ -79,6 +79,9 @@ class LogStash::Filters::S3AccessLog < LogStash::Filters::Base
     #   http://docs.aws.amazon.com/AmazonS3/latest/dev/LogFormat.html
     AMAZON_S3_ACCESS_LOG_FORMAT  = Regexp.new('([^ ]*) ([^ ]*) \[([^\]]*)\] ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ("[^"]*"|-) ([^ ]*|-) ([^ ]*|-) ([^ ]*|-) ([^ ]*|-) ([^ ]*|-) ([^ ]*|-) ("[^"]*"|-) ("[^"]*"|-) ([^ ]*|-)( ?.*)')
 
+    # Parse 'GET /11625060-v901740/20140907093122_J1084854-mp4.mp4 HTTP/1.1' into %w(GET /11625060-v901740/20140907093122_J1084854-mp4.mp4 1.1)
+    AMAZON_S3_REQUEST_URI_FORMAT = Regexp.new('(\b\w+\b) (\S+)(?: HTTP\/(\d+\.\d+))?')
+
     S3_COPY_OPERATION = 'REST.COPY.OBJECT_GET'.freeze
 
     APACHE_CLF_FORMAT = "%s - %s [%s] %s %s %s %s %s %d".freeze
@@ -106,6 +109,13 @@ class LogStash::Filters::S3AccessLog < LogStash::Filters::Base
         event['agent']              = $17 # agent instead of user_agent intentional
         event['version_id']         = '-' == $18 ? nil : $18 # remove empty
         event['trailing_fields']    = $19.strip! rescue nil  # trailing fields as single string or nil if empty
+
+        # disect request_uri
+        if event['request_uri'] =~ AMAZON_S3_REQUEST_URI_FORMAT
+          event['verb'], event['request'], event['httpversion'] = $1, $2, $3
+        else
+          event['rawrequest'] = event['request_uri']
+        end
       else
         ArgumentError.new("Line not in Amazon S3 access log format: #{@source_line}")
       end
