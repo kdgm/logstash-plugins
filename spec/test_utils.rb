@@ -43,11 +43,17 @@ module LogStash
 
     def type(default_type)
       let(:default_type) { default_type }
+      puts "Setting default type: #{default_type}"
     end
     
-    def tags(*tags)
-      let(:default_tags) { tags }
-      puts "Setting default tags: #{@default_tags}"
+    def tags(*default_tags)
+      let(:default_tags) { default_tags }
+      puts "Setting default tags: #{default_tags}"
+    end
+
+    def fields(default_fields)
+      let(:default_fields) { default_fields }
+      puts "Setting default fields: #{default_fields}"
     end
 
     def sample(sample_event, &block)
@@ -62,6 +68,9 @@ module LogStash
           next sample_event.collect do |e|
             e = { "message" => e } if e.is_a?(String)
             e['type'] ||= default_type rescue nil # default_type
+            default_fields.each do |name, value|
+              e[name] ||= value
+            end rescue nil # when fields haven't been declared
             next LogStash::Event.new(e)
           end
         end
