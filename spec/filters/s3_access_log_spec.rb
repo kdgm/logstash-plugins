@@ -1,4 +1,4 @@
-require "test_utils"
+require "./spec/test_utils"
 require "logstash/filters/s3_access_log"
 
 shared_examples "converts valid S3 Server Access Log lines into Apache CLF format" do
