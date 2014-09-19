@@ -77,32 +77,47 @@ class LogStash::Filters::S3AccessLog < LogStash::Filters::Base
 
     # Amazon S3 Server Access Log Format is documented at:
     #   http://docs.aws.amazon.com/AmazonS3/latest/dev/LogFormat.html
-    AMAZON_S3_ACCESS_LOG_FORMAT = Regexp.new('([^ ]*) ([^ ]*) \[([^\]]*)\] ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ("[^"]*"|-) ([^ ]*|-) ([^ ]*|-) ([^ ]*|-) ([^ ]*|-) ([^ ]*|-) ([^ ]*|-) ("[^"]*"|-) ("[^"]*"|-) ([^ ]*|-)(.*)')
+    AMAZON_S3_ACCESS_LOG_FORMAT  = Regexp.new('([^ ]*) ([^ ]*) \[([^\]]*)\] ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*) ("[^"]*"|-) ([^ ]*|-) ([^ ]*|-) ([^ ]*|-) ([^ ]*|-) ([^ ]*|-) ([^ ]*|-) ("[^"]*"|-) ("[^"]*"|-) ([^ ]*|-)( ?.*)')
+
+    # Parse 'GET /11625060-v901740/20140907093122_J1084854-mp4.mp4 HTTP/1.1' into %w(GET /11625060-v901740/20140907093122_J1084854-mp4.mp4 1.1)
+    AMAZON_S3_REQUEST_URI_FORMAT = Regexp.new('(\b\w+\b) (\S+)(?: HTTP\/(\d+\.\d+))?')
 
     S3_COPY_OPERATION = 'REST.COPY.OBJECT_GET'.freeze
 
     APACHE_CLF_FORMAT = "%s - %s [%s] %s %s %s %s %s %d".freeze
 
-    # attr_reader :owner,         :bucket,           :timestamp,
-    #             :remote_ip,     :requester,        :request_id,
-    #             :operation,     :key,              :request_uri,
-    #             :http_status,   :s3_error_code,    :bytes_sent,
-    #             :object_size,   :total_time_in_ms, :turn_around_time_in_ms,
-    #             :referrer,      :user_agent,       :request_version_id
-
-    def initialize(source_line)
-      @source_line = source_line
+    def initialize(event, source_field)
+      @source_line = event[source_field]
       if @source_line =~ AMAZON_S3_ACCESS_LOG_FORMAT
 
-        @owner       = $1;  @bucket           = $2;  @timestamp              = $3
-        @remote_ip   = $4;  @requester        = $5;  @request_id             = $6
-        @operation   = $7;  @key              = $8;  @request_uri            = $9
-        @http_status = $10; @s3_error_code    = $11; @bytes_sent             = $12
-        @object_size = $13; @total_time_in_ms = $14; @turn_around_time_in_ms = $15
-        @referrer    = $16; @user_agent       = $17; @request_version_id     = $18
+        event['owner']              = $1
+        event['bucket']             = $2
+        event['timestamp']          = $3
+        event['remote_ip']          = $4
+        event['requester']          = $5
+        event['request_id']         = $6
+        event['operation']          = $7
+        event['key']                = '-' == $8 ? nil : $8 # remove empty
+        event['request_uri']        = $9
+        event['http_status']        = $10
+        event['error_code']         = '-' == $11 ? nil : $11 # remove empty
+        event['bytes']              = '-' == $12 ? 0   : $12 # bytes instead of bytes_sent intentional
+        event['object_size']        = $13
+        event['total_time_ms']      = $14
+        event['turnaround_time_ms'] = $15
+        event['referrer']           = $16
+        event['agent']              = $17 # agent instead of user_agent intentional
+        event['version_id']         = '-' == $18 ? nil : $18 # remove empty
+        event['trailing_fields']    = $19.strip! rescue nil  # trailing fields as single string or nil if empty
 
+        # disect request_uri
+        if event['request_uri'] =~ AMAZON_S3_REQUEST_URI_FORMAT
+          event['verb'], event['request'], event['httpversion'] = $1, $2, $3
+        else
+          event['rawrequest'] = event['request_uri']
+        end
       else
-        ArgumentError.new("Line not in Amazon S3 access log format: #{source_line}")
+        ArgumentError.new("Line not in Amazon S3 access log format: #{@source_line}")
       end
     end
 
@@ -113,15 +128,16 @@ class LogStash::Filters::S3AccessLog < LogStash::Filters::Base
     # An empty request_uri with REST.COPY_OBJECT_GET operations is
     # replaced with a request_uri 'POST /<key>' with referrer "REST.COPY.OBJECT_GET"
     #
-    def convert_copy_operation!
-      raise ArgumentError.new("Not a #{S3_COPY_OPERATION}: #{@source_line}") unless is_copy_operation?
-      @referrer    = %("#{@operation}")
-      @user_agent  = '"-"'
-      @request_uri = %("POST /#{@key} HTTP/1.1") # output as POST
+    def convert_copy_operation!(event)
+      raise ArgumentError.new("Not a #{S3_COPY_OPERATION}: #{@source_line}") unless is_copy_operation?(event)
+      event['referrer']    = %("#{event['operation']}")
+      event['agent']       = '"-"'
+      event['request_uri'] = %("POST /#{event['key']} HTTP/1.1") # output as POST
+      event['bytes']       = '0'
     end
 
-    def is_copy_operation?
-      '-' == @request_uri && S3_COPY_OPERATION == @operation
+    def is_copy_operation?(event)
+      '-' == event['request_uri'] && S3_COPY_OPERATION == event['operation']
     end
 
     #
@@ -130,34 +146,30 @@ class LogStash::Filters::S3AccessLog < LogStash::Filters::Base
     # This method recalculates the bytes_sent to estimate the bytes received by the client device
     # based on an assumed bitrate of 24 kbit/sec.
     #
-    # Assume 128 Kbytes buffer is ingested and total_time_in_ms
+    # Assume 128 Kbytes buffer is ingested and total_time_ms
     #
-    def recalculate_partial_content!(max_kbitrate)
-      if 206 == @http_status.to_i && ((@bytes_sent.to_i*8)/@total_time_in_ms.to_i > 2000)
-        @bytes_sent = [ 128 * 1024 + ((max_kbitrate/8000.0).round) * @total_time_in_ms.to_i, @bytes_sent.to_i ].min # 128 K buffer + 3 bytes/msec = 3 kbytes/sec = 24 kbit/sec
+    def recalculate_partial_content!(event, max_kbitrate)
+      if 206 == event['http_status'].to_i && ((event['bytes'].to_i*8)/event['total_time_ms'].to_i > 2000)
+        event['bytes'] = [ 128 * 1024 + ((max_kbitrate/8000.0).round) * event['total_time_ms'].to_i, event['bytes'].to_i ].min # 128 K buffer + 3 bytes/msec = 3 kbytes/sec = 24 kbit/sec
       end
     end
 
     # Apache Combined Log Format is documented at:
     #   https://httpd.apache.org/docs/trunk/logs.html#combined
-    def to_apache_clf
-      APACHE_CLF_FORMAT % [@remote_ip,   requester,   @timestamp, @request_uri,
-                           @http_status, @bytes_sent, @referrer,  @user_agent, duration]
-    end
-
-    def matched?
-      @matched
+    def to_apache_clf(event)
+      APACHE_CLF_FORMAT % [ event['remote_ip'],   requester(event), event['timestamp'], event['request_uri'],
+                            event['http_status'], event['bytes'],   event['referrer'],  event['agent'], duration(event) ]
     end
 
     private
 
     # shorten requester to max 10 characters
-    def requester
-      @requester[0..9]
+    def requester(event)
+      event['requester'][0..9]
     end
 
-    def duration
-      (@total_time_in_ms.to_i/1000.0).round
+    def duration(event)
+      (event['total_time_ms'].to_i / 1000.0).round
     end
 
   end
@@ -188,7 +200,7 @@ class LogStash::Filters::S3AccessLog < LogStash::Filters::Base
   public
   def register
     @source ||= 'message' 
-    @target = @source if @target.nil?
+    @target ||= 'message'
   end # def register
 
   public
@@ -197,23 +209,23 @@ class LogStash::Filters::S3AccessLog < LogStash::Filters::Base
 
     @logger.debug("Running S3 Server Access Log filter", :event => event)
 
-    line = S3AccessLogLine.new(event[@source])
+    line = S3AccessLogLine.new(event, @source)
     
-    if line.is_copy_operation?
+    if line.is_copy_operation?(event)
       case @copy_operation
       when 'drop'
         event.cancel
         return
       when 'convert'
-        line.convert_copy_operation!
+        line.convert_copy_operation!(event)
       else
         raise ArgumentError.new("Invalid copy operation: #{@copy_operation}")
       end
     end
 
-    line.recalculate_partial_content!(@max_kbitrate) if @recalculate_partial_content
+    line.recalculate_partial_content!(event, @max_kbitrate) if @recalculate_partial_content
 
-    event[@target] = line.to_apache_clf
+    event[@target] = line.to_apache_clf(event)
     filter_matched(event)
 
     @logger.debug? && @logger.debug("Event after S3AccessLog filter", :event => event)

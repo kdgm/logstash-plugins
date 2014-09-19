@@ -1,0 +1,2 @@
+ICECAST_ACCESS_LOG %{IPORHOST:clientip} %{USEROREMAIL:ident} (?:%{USEROREMAIL:auth}|) \[%{HTTPDATE:timestamp}\] "(?:%{WORD:verb} %{NOTSPACE:request}(?: (HTTP|ICE)/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-) %{QS:referrer};? %{QS:agent} %{NONNEGINT:duration}
+ICECAST_ERROR_LOG \[%{GREEDYDATA:timestamp}\]%{SPACE}%{GREEDYDATA:message}

@@ -1,0 +1,1 @@
+MAVEN_AGENT [Mm][Aa][Vv][Ee][Nn]/%{NOTSPACE:[maven][version]}(?:\s+build\s+%{GREEDYDATA:[maven][build]}|)\s+image\s+%{NOTSPACE:[maven][image]}\s+s/n:%{MAC:[maven][mac]}
