@@ -1,14 +1,59 @@
 require "./spec/test_utils"
 require "logstash/filters/s3_access_log"
 
+def check_all_fields_are_set
+  # fields from S3_ACCESS_LOG
+  insist { subject['owner']              } != nil
+  insist { subject['bucket']             } != nil
+  insist { subject['timestamp']          } != nil
+  insist { subject['remote_ip']          } != nil
+  insist { subject['requester']          } != nil
+  insist { subject['request_id']         } != nil
+  insist { subject['operation']          } != nil
+  insist { subject['key']                } != nil
+  insist { subject['request_uri']        } != nil
+  insist { subject['http_status']        } != nil
+  insist { subject['bytes']              } =~ /\A[0-9]*\z/
+  insist { subject['object_size']        } != nil
+  insist { subject['total_time_ms']      } != nil
+  insist { subject['turnaround_time_ms'] } != nil
+  insist { subject['referrer']           } != nil
+  insist { subject['agent']              } != nil
+
+  # fields from S3_REQUEST_LINE
+  insist { subject['verb']               } != nil
+  insist { subject['request']            } != nil
+  insist { subject['httpversion']        } != nil
+end
+
+def check_access_log_fields_are_set
+  insist { subject['clientip']           } != nil
+  insist { subject['response']           } != nil
+  insist { subject['httpversion']        } != nil
+end
+
 shared_examples "converts valid S3 Server Access Log lines into Apache CLF format" do
 
-  sample(%(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [24/Mar/2013:10:22:56 +0000] 77.168.122.24 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 A5A6B08FB9342F4D REST.GET.OBJECT 10010160/2013-03-24-0930.mp3 "GET /10010160/2013-03-24-0930.mp3?Signature=75eBWlMvIpO357%2FqKLdn0sZRP08%3D&Expires=1364127776&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1" 200 - 18547033 18547033 17344 58 "http://kerkdienstgemist.nl/mp3/recorder.php?id=452" "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)" -")) do
+  sample(%(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [24/Mar/2013:10:22:56 +0000] 77.168.122.24 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 A5A6B08FB9342F4D REST.GET.OBJECT 10010160/2013-03-24-0930.mp3 "GET /10010160/2013-03-24-0930.mp3?Signature=75eBWlMvIpO357%2FqKLdn0sZRP08%3D&Expires=1364127776&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1" 200 - 18547033 18547033 17344 58 "http://kerkdienstgemist.nl/mp3/recorder.php?id=452" "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)" -)) do
     insist { subject["message"] } == "77.168.122.24 - 2cf7e6b063 [24/Mar/2013:10:22:56 +0000] \"GET /10010160/2013-03-24-0930.mp3?Signature=75eBWlMvIpO357%2FqKLdn0sZRP08%3D&Expires=1364127776&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1\" 200 18547033 \"http://kerkdienstgemist.nl/mp3/recorder.php?id=452\" \"Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)\" 17"
+    insist { subject["tags"] }.include? 's3_timestamp'
+    insist { subject["tags"] }.include? 'billable'
+    insist { subject["timestamp"] } == '24/Mar/2013:10:22:56 +0000'
+    insist { subject["s3_message"] } == %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [24/Mar/2013:10:22:56 +0000] 77.168.122.24 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 A5A6B08FB9342F4D REST.GET.OBJECT 10010160/2013-03-24-0930.mp3 "GET /10010160/2013-03-24-0930.mp3?Signature=75eBWlMvIpO357%2FqKLdn0sZRP08%3D&Expires=1364127776&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1" 200 - 18547033 18547033 17344 58 "http://kerkdienstgemist.nl/mp3/recorder.php?id=452" "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)" -)
+    insist { subject['error_code'] } == nil
+    insist { subject['version_id'] } == nil
+    insist { subject['trailing_fields'] } == nil
+
+    check_all_fields_are_set
+
+    check_access_log_fields_are_set
   end
 
   sample %(9ab8c3813615ea8387cf4cc559958ec02531c04954bbbf924321656cc030bce3 n-e-w-legacy [04/Jun/2012:16:44:26 +0000] 10.1.155.11 9ab8c3813615ea8387cf4cc559958ec02531c04954bbbf924321656cc030bce3 2B8A7289376A942E REST.GET.LOGGING_STATUS - "GET /n-e-w-legacy?logging HTTP/1.1" 200 - 239 - 8 - "-" "S3Console/0.4" -) do
     insist { subject["message"] } == "10.1.155.11 - 9ab8c38136 [04/Jun/2012:16:44:26 +0000] \"GET /n-e-w-legacy?logging HTTP/1.1\" 200 239 \"-\" \"S3Console/0.4\" 0"
+    insist { subject["tags"] }.include? 's3_timestamp'
+    insist { subject["tags"] & [ 'billable' ] } == []
+    insist { subject["timestamp"] } == '04/Jun/2012:16:44:26 +0000'
   end 
 
   sample %(9ab8c3813615ea8387cf4cc559958ec02531c04954bbbf924321656cc030bce3 n-e-w-legacy [04/Jun/2012:16:44:26 +0000] 10.2.7.13 9ab8c3813615ea8387cf4cc559958ec02531c04954bbbf924321656cc030bce3 F5FB585AB1B363ED REST.GET.BUCKET - "GET /n-e-w-legacy?prefix=&max-keys=100&marker=&delimiter=/ HTTP/1.1" 200 - 434 - 35 35 "-" "S3Console/0.4" -) do
@@ -68,7 +113,8 @@ shared_examples "rejects invalid log lines" do
 
   sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [24/Mar/2013:10:22:56 +0000] 77.168.122.24 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 A5A6B08FB9342F4D REST.GET.OBJECT 10010160/2013-03-24-0930.mp3 "GET /10010160/2013-03-24-0930.mp3?Signature=75eBWlMvIpO357%2FqKLdn0sZRP08%3D&Expires=1364127776&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1" 200 - 18547033 18547033 17344 58 "http://kerkdienstgemist.nl/mp3/recorder.php?id=452"" "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)" -) do
     # message unmodified with error tag
-    insist { subject["message"] } == %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [24/Mar/2013:10:22:56 +0000] 77.168.122.24 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 A5A6B08FB9342F4D REST.GET.OBJECT 10010160/2013-03-24-0930.mp3 "GET /10010160/2013-03-24-0930.mp3?Signature=75eBWlMvIpO357%2FqKLdn0sZRP08%3D&Expires=1364127776&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1" 200 - 18547033 18547033 17344 58 "http://kerkdienstgemist.nl/mp3/recorder.php?id=452"" "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)" -)
+    insist { subject["s3_message"] } == %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [24/Mar/2013:10:22:56 +0000] 77.168.122.24 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 A5A6B08FB9342F4D REST.GET.OBJECT 10010160/2013-03-24-0930.mp3 "GET /10010160/2013-03-24-0930.mp3?Signature=75eBWlMvIpO357%2FqKLdn0sZRP08%3D&Expires=1364127776&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1" 200 - 18547033 18547033 17344 58 "http://kerkdienstgemist.nl/mp3/recorder.php?id=452"" "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)" -)
+    insist { subject["message"] } == nil
     insist { subject["tags"] }.include?(parse_failure_tag)
   end
 
@@ -77,15 +123,15 @@ end
 shared_examples "convert REST.COPY.OBJECT_GET to POST" do
 
   sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.staging.kerkdienstgemist.nl [17/Sep/2010:13:38:36 +0000] 85.113.244.146 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 71F7D2AAA93B0A05 REST.COPY.OBJECT_GET 10010150/2010-08-29-0930.mp3 - 200 - - 13538337 - - - - -) do
-    insist { subject["message"] } == %(85.113.244.146 - 2cf7e6b063 [17/Sep/2010:13:38:36 +0000] "POST /10010150/2010-08-29-0930.mp3 HTTP/1.1" 200 - "REST.COPY.OBJECT_GET" "-" 0)
+    insist { subject["message"] } == %(85.113.244.146 - 2cf7e6b063 [17/Sep/2010:13:38:36 +0000] "POST /10010150/2010-08-29-0930.mp3 HTTP/1.1" 200 0 "REST.COPY.OBJECT_GET" "-" 0)
   end
 
   sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.staging.kerkdienstgemist.nl [17/Sep/2010:13:38:37 +0000] 85.113.244.146 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 7CC5E3D09AE78CAE REST.COPY.OBJECT_GET 10010150/2010-09-05-1000.mp3 - 200 - - 9860402 - - - - -) do
-    insist { subject["message"] } == %(85.113.244.146 - 2cf7e6b063 [17/Sep/2010:13:38:37 +0000] "POST /10010150/2010-09-05-1000.mp3 HTTP/1.1" 200 - "REST.COPY.OBJECT_GET" "-" 0)
+    insist { subject["message"] } == %(85.113.244.146 - 2cf7e6b063 [17/Sep/2010:13:38:37 +0000] "POST /10010150/2010-09-05-1000.mp3 HTTP/1.1" 200 0 "REST.COPY.OBJECT_GET" "-" 0)
   end
 
   sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [09/Sep/2014:18:33:15 +0000] 79.125.24.185 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 5E493280357FAC3B REST.COPY.OBJECT_GET 10518050/upload/f0a2c702d58183844b064eb49f8b795d.mp3 - 200 - - 16251603 - - - - -) do
-    insist { subject["message"] } == "79.125.24.185 - 2cf7e6b063 [09/Sep/2014:18:33:15 +0000] \"POST /10518050/upload/f0a2c702d58183844b064eb49f8b795d.mp3 HTTP/1.1\" 200 - \"REST.COPY.OBJECT_GET\" \"-\" 0"
+    insist { subject["message"] } == "79.125.24.185 - 2cf7e6b063 [09/Sep/2014:18:33:15 +0000] \"POST /10518050/upload/f0a2c702d58183844b064eb49f8b795d.mp3 HTTP/1.1\" 200 0 \"REST.COPY.OBJECT_GET\" \"-\" 0"
   end
 
 end
@@ -121,45 +167,65 @@ end
 # S3_REQUEST_LINE (?:%{WORD:verb} %{NOTSPACE:request}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})
 # S3_ACCESS_LOG %{WORD:owner} %{NOTSPACE:bucket} \[%{HTTPDATE:timestamp}\] %{IP:clientip} %{NOTSPACE:requester} %{NOTSPACE:request_id} %{NOTSPACE:operation} %{NOTSPACE:key} (?:"%{S3_REQUEST_LINE:request_uri}"|-) (?:%{INT:response}|-) (?:-|%{NOTSPACE:error_code}) (?:%{INT:bytes}|-) (?:%{INT:object_size}|-) (?:%{INT:request_time_ms}|-) (?:%{INT:turnaround_time_ms}|-) (?:%{QS:referrer}|-) (?:"?%{QS:agent}"?|-) (?:-|%{NOTSPACE:version_id})
 #
-describe LogStash::Filters::S3AccessLog do
+describe "Custom s3_access_log filter solution" do
   extend LogStash::RSpec
 
   describe "with default config" do
 
     let(:parse_failure_tag) { '_s3parsefailure'}
 
-    config <<-CONFIG
+    config %q(
       filter {
-        s3_access_log { }
+        mutate { rename => [ 'message', 's3_message' ] }
+        s3_access_log {
+          source => 's3_message'
+          recalculate_partial_content => true
+          add_field => [ 'logsource', 's3' ]
+          add_field => [ 'clientip', '%{remote_ip}' ]
+          add_field => [ 'response', '%{http_status}' ]
+        }
+        if [logsource] == 's3' {
+          date {
+            add_tag => 's3_timestamp'
+            match   => [ 'timestamp', 'dd/MMM/yyyy:HH:mm:ss Z' ] # use icecast timestamp as @timestamp
+            locale  => 'en'
+          }
+          if [request] =~ /\/[\d]{8}.*/ {
+            noop { add_tag => 'billable' }
+          }
+        }
       }
-    CONFIG
+    )
 
     it_behaves_like "converts valid S3 Server Access Log lines into Apache CLF format"
     it_behaves_like "rejects invalid log lines"
     it_behaves_like "convert REST.COPY.OBJECT_GET to POST"
-    it_behaves_like "don't recalculate partial content"
-  end
-
-  describe "with recalculate_partial_content set to true" do
-    config <<-CONFIG
-    filter {
-      s3_access_log {
-        recalculate_partial_content => true
-      }
-    }
-    CONFIG
-
     it_behaves_like "recalculate partial content"
   end
 
-  describe "with copy_operation set to 'drop'" do
-    config <<-CONFIG
+  describe "with recalculate_partial_content set to true" do
+    config %q(
       filter {
+        mutate { rename => [ 'message', 's3_message' ] }
         s3_access_log {
+          source => 's3_message'
+          recalculate_partial_content => false
+        }
+      }
+    )
+    it_behaves_like "don't recalculate partial content"
+  end
+
+  describe "with copy_operation set to 'drop'" do
+    config %q(
+      filter {
+        mutate { rename => [ 'message', 's3_message' ] }
+        s3_access_log {
+          source => 's3_message'
           copy_operation => 'drop'
         }
       }
-    CONFIG
+    )
 
     it_behaves_like "drop REST.COPY_OBJECT_GET"
   end
@@ -172,102 +238,13 @@ describe "Logstash grok and filter solution" do
   describe "with default config" do
     let(:parse_failure_tag) { '_grokparsefailure'}
 
-    config <<-CONFIG
-      filter {
-       mutate {
-          'rename' => ['@timestamp', 'received_at']
-        }
-        grok {
-          'patterns_dir' => './patterns'
-          'match' => [ 'message', '%{S3_ACCESS_LOG}' ]
-          'add_tag' => 's3_access_log'
-        }
-        if 's3_access_log' in [tags] {
-          if 'REST.COPY.OBJECT_GET' == [operation] {
-            # mutate {} or drop {}
-            mutate {
-              'replace' => [ 'request_uri', 'POST /%{key} HTTP/1.1', 'referrer', '"%{operation}"', 'bytes', '-', 'agent', '"-"', 'duration', '0' ]
-            }
-          }
-          ruby { code => "event['requester'] && event['requester'] = event['requester'][0..9]" }
-          ruby { code => "event['request_time_ms'] && event['duration'] = (event['request_time_ms'].to_f / 1000.0).round" }
-          if [response] == '206' {
-            noop {}
-          }
-          mutate {
-            'replace' => [ 'message', '%{clientip} - %{requester} [%{timestamp}] "%{request_uri}" %{response} %{bytes} %{referrer} %{agent} %{duration}']
-          }
-        }
-      }
-    CONFIG
+    type 's3'
+    config [ 'filter{', File.read("conf.d/70_s3.conf"), '}' ].join
 
     it_behaves_like "converts valid S3 Server Access Log lines into Apache CLF format"
     it_behaves_like "rejects invalid log lines"
     it_behaves_like "convert REST.COPY.OBJECT_GET to POST"
-    it_behaves_like "don't recalculate partial content"
-  end
-
-  describe "with recalculate_partial_content set to true" do
-
-    config <<-CONFIG
-      filter {
-       mutate {
-          'rename' => ['@timestamp', 'received_at']
-        }
-        grok {
-          'patterns_dir' => './patterns'
-          'match' => [ 'message', '%{S3_ACCESS_LOG}' ]
-          'add_tag' => 's3_access_log'
-        }
-        if 's3_access_log' in [tags] {
-          if 'REST.COPY.OBJECT_GET' == [operation] {
-            mutate {
-              'replace' => [ 'request_uri', 'POST /%{key} HTTP/1.1', 'referrer', '"%{operation}"', 'bytes', '-', 'agent', '"-"', 'duration', '0' ]
-            }
-          }
-          ruby { code => "event['requester'] && event['requester'] = event['requester'][0..9]" }
-          ruby { code => "event['request_time_ms'] && event['duration'] = (event['request_time_ms'].to_f / 1000.0).round" }
-          if [response] == '206' {
-            ruby { code => "event['bytes'] = [ 128 * 1024 + 3 * event['request_time_ms'].to_i, event['bytes'].to_i ].min if ((event['bytes'].to_i*8)/event['request_time_ms'].to_i > 2000)" }
-          }
-          mutate {
-            'replace' => [ 'message', '%{clientip} - %{requester} [%{timestamp}] "%{request_uri}" %{response} %{bytes} %{referrer} %{agent} %{duration}']
-          }
-        }
-      }
-    CONFIG
-
     it_behaves_like "recalculate partial content"
   end
 
-  describe "with copy_operation set to 'drop'" do
-    config <<-CONFIG
-      filter {
-       mutate {
-          'rename' => ['@timestamp', 'received_at']
-        }
-        grok {
-          'patterns_dir' => './patterns'
-          'match' => [ 'message', '%{S3_ACCESS_LOG}' ]
-          'add_tag' => 's3_access_log'
-        }
-        if 's3_access_log' in [tags] {
-          if 'REST.COPY.OBJECT_GET' == [operation] {
-            drop {}
-          }
-          ruby { code => "event['requester'] && event['requester'] = event['requester'][0..9]" }
-          ruby { code => "event['request_time_ms'] && event['duration'] = (event['request_time_ms'].to_f / 1000.0).round" }
-          if [response] == '206' {
-            ruby { code => "event['bytes'] = [ 128 * 1024 + 3 * event['request_time_ms'].to_i, event['bytes'].to_i ].min if ((event['bytes'].to_i*8)/event['request_time_ms'].to_i > 2000)" }
-          }
-          mutate {
-            'replace' => [ 'message', '%{clientip} - %{requester} [%{timestamp}] "%{request_uri}" %{response} %{bytes} %{referrer} %{agent} %{duration}']
-          }
-        }
-      }
-    CONFIG
-
-    it_behaves_like "drop REST.COPY_OBJECT_GET"
-  end
-
-end
+ end
