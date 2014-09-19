@@ -5,4 +5,4 @@ spec:
 	../logstash/bin/logstash rspec spec/filters/*.rb
 
 agent:
-	../logstash/bin/logstash --pluginpath lib -f logstash.conf
+	HOME=`pwd` ../logstash/bin/logstash --pluginpath lib -f conf.d -v
