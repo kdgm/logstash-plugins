@@ -43,6 +43,8 @@ shared_examples "converts valid S3 Server Access Log lines into Apache CLF forma
     insist { subject['error_code'] } == nil
     insist { subject['version_id'] } == nil
     insist { subject['trailing_fields'] } == nil
+    insist { subject['clientip'] } == subject['remote_ip']
+    insist { subject['response'] } == subject['http_status']
 
     validate_s3_fields
     validate_s3_request_uri_fields
