@@ -160,6 +160,25 @@ shared_examples "drop REST.COPY_OBJECT_GET" do
 
 end
 
+shared_examples "parse HEAD requests correctly" do
+
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [14/Sep/2014:17:04:09 +0000] 54.73.228.177 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 B29B27C9138CCF11 REST.HEAD.OBJECT 11829090-v978102/20140914075051_15126453-mp4.mp4 "HEAD /11829090-v978102/20140914075051_15126453-mp4.mp4 HTTP/1.1" 200 - - 431614646 9 - "-" "-" -) do
+    insist { subject["message"] } == ''
+    insist { subject["timestamp"] } == '14/Sep/2014:17:04:09 +0000'
+    insist { subject["tags"] }.include? 's3_timestamp'
+    insist { subject["verb"] } == 'HEAD'
+  end
+
+end
+
+shared_examples "trailing fields" do
+
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [14/Sep/2014:17:04:09 +0000] 54.73.228.177 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 B29B27C9138CCF11 REST.HEAD.OBJECT 11829090-v978102/20140914075051_15126453-mp4.mp4 "HEAD /11829090-v978102/20140914075051_15126453-mp4.mp4 HTTP/1.1" 200 - - 431614646 9 - "-" "-" - any other fields) do
+    insist { subject["trailing_fields"] } == 'any other fields'
+  end
+
+end
+
 #
 # Equivalent config with grok (S3_ACCESS_LOG) and standard filters.
 # The s3_access_log filter is more that six times faster.
