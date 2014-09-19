@@ -1,6 +1,7 @@
 require "./spec/test_utils"
 
-def check_all_fields_are_set
+def validate_s3_fields
+
   # fields from S3_ACCESS_LOG
   insist { subject['owner']              } != nil
   insist { subject['bucket']             } != nil
@@ -25,7 +26,7 @@ def check_all_fields_are_set
   insist { subject['httpversion']        } != nil
 end
 
-def check_access_log_fields_are_set
+def validate_s3_request_uri_fields
   insist { subject['clientip']           } != nil
   insist { subject['response']           } != nil
   insist { subject['httpversion']        } != nil
@@ -43,9 +44,8 @@ shared_examples "converts valid S3 Server Access Log lines into Apache CLF forma
     insist { subject['version_id'] } == nil
     insist { subject['trailing_fields'] } == nil
 
-    check_all_fields_are_set
-
-    check_access_log_fields_are_set
+    validate_s3_fields
+    validate_s3_request_uri_fields
   end
 
   sample %(9ab8c3813615ea8387cf4cc559958ec02531c04954bbbf924321656cc030bce3 n-e-w-legacy [04/Jun/2012:16:44:26 +0000] 10.1.155.11 9ab8c3813615ea8387cf4cc559958ec02531c04954bbbf924321656cc030bce3 2B8A7289376A942E REST.GET.LOGGING_STATUS - "GET /n-e-w-legacy?logging HTTP/1.1" 200 - 239 - 8 - "-" "S3Console/0.4" -) do
@@ -245,7 +245,6 @@ describe "Custom s3_access_log filter solution" do
 end
 
 describe "Logstash grok and filter solution" do
-
   extend LogStash::RSpec
 
   describe "with default config" do
