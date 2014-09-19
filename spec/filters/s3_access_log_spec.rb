@@ -1,5 +1,4 @@
 require "./spec/test_utils"
-require "logstash/filters/s3_access_log"
 
 def check_all_fields_are_set
   # fields from S3_ACCESS_LOG
@@ -193,28 +192,8 @@ describe "Custom s3_access_log filter solution" do
 
     let(:parse_failure_tag) { '_s3parsefailure'}
 
-    config %q(
-      filter {
-        mutate { rename => [ 'message', 's3_message' ] }
-        s3_access_log {
-          source => 's3_message'
-          recalculate_partial_content => true
-          add_field => [ 'logsource', 's3' ]
-          add_field => [ 'clientip', '%{remote_ip}' ]
-          add_field => [ 'response', '%{http_status}' ]
-        }
-        if [logsource] == 's3' {
-          date {
-            add_tag => 's3_timestamp'
-            match   => [ 'timestamp', 'dd/MMM/yyyy:HH:mm:ss Z' ] # use icecast timestamp as @timestamp
-            locale  => 'en'
-          }
-          if [request] =~ /\/[\d]{8}.*/ {
-            noop { add_tag => 'billable' }
-          }
-        }
-      }
-    )
+    type 's3'
+    config [ 'filter{', File.read("conf.d/70_s3.conf"), '}' ].join
 
     it_behaves_like "converts valid S3 Server Access Log lines into Apache CLF format"
     it_behaves_like "rejects invalid log lines"
@@ -252,13 +231,14 @@ describe "Custom s3_access_log filter solution" do
 end
 
 describe "Logstash grok and filter solution" do
+
   extend LogStash::RSpec
 
   describe "with default config" do
     let(:parse_failure_tag) { '_grokparsefailure'}
 
-    type 's3'
-    config [ 'filter{', File.read("conf.d/70_s3.conf"), '}' ].join
+    type 's3_test_grok'
+    config [ 'filter{', File.read("conf.d/71_s3_test_grok.conf"), '}' ].join
 
     it_behaves_like "converts valid S3 Server Access Log lines into Apache CLF format"
     it_behaves_like "rejects invalid log lines"
@@ -266,4 +246,4 @@ describe "Logstash grok and filter solution" do
     it_behaves_like "recalculate partial content"
   end
 
- end
+end
