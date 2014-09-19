@@ -1,0 +1,1 @@
+KDGM_WOWZA_ACCESS_LOG (?:%{IPORHOST:clientip}|-) %{USER:ident} %{USER:auth} \[%{HTTPDATE:timestamp}\] "(?:%{WORD:verb} %{NOTSPACE:request}(?: HTTP/%{NUMBER:httpversion})?|%{DATA:rawrequest})" %{NUMBER:response} (?:%{NUMBER:bytes}|-) %{QS:referrer} %{QS:agent} %{NONNEGINT:duration}

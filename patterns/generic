@@ -1,0 +1,2 @@
+EMAIL [.a-zA-Z0-9_-]+@%{NOTSPACE:domain}
+USEROREMAIL (?:%{EMAIL}|%{USER})

@@ -1,0 +1,1 @@
+SMCP_APPVER %{NOTSPACE:[smcp][version]}(?:\s+build\s+%{NOTSPACE:[smcp][build]}|)
