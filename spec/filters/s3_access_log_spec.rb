@@ -178,6 +178,26 @@ shared_examples "trailing fields" do
 
 end
 
+shared_examples "handling regression cases" do
+
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Sep/2014:07:57:28 +0000] 84.31.184.148 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 50F3B3FA4D044EF4 REST.GET.OBJECT 13325060/2014-05-12-1400.mp3 "GET /13325060/2014-05-12-1400.mp3?Signature=jXRvfsf9W7mGaCulqa5t7013kuM%3D&Expires=1411120647&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1" 304 - - 10750830 11 - "-" "NSPlayer/12.00.7601.17514 WMFSDK/12.00.7601.17514" -) do
+    insist { subject["message"] } == "84.31.184.148 - 2cf7e6b063 [19/Sep/2014:07:57:28 +0000] \"GET /13325060/2014-05-12-1400.mp3?Signature=jXRvfsf9W7mGaCulqa5t7013kuM%3D&Expires=1411120647&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1\" 304 0 \"-\" \"NSPlayer/12.00.7601.17514 WMFSDK/12.00.7601.17514\" 0"
+  end
+
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Sep/2014:07:53:40 +0000] 79.125.24.185 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 F8E64FC85895C101 REST.DELETE.OBJECT 90704041-v1037416/20140914090032_15200524-mp4.mp4 "DELETE /90704041-v1037416/20140914090032_15200524-mp4.mp4 HTTP/1.1" 204 - - 167213670 13 - "-" "-" -) do
+    insist { subject["message"] } == "79.125.24.185 - 2cf7e6b063 [19/Sep/2014:07:53:40 +0000] \"DELETE /90704041-v1037416/20140914090032_15200524-mp4.mp4 HTTP/1.1\" 204 0 \"-\" \"-\" 0"
+  end
+
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Sep/2014:07:53:11 +0000] 195.64.67.149 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 2C1FAFE37EA7067F REST.PUT.ACL 92221041-v1014211/20140914075120_15201610-mp4.mp4 "PUT /92221041-v1014211%2F20140914075120_15201610-mp4.mp4?acl HTTP/1.1" 200 - - - 40 - "-" "Cyberduck/4.2.1 (Mac OS X/10.9.4) (i386)" -) do
+    insist { subject["message"] } == "195.64.67.149 - 2cf7e6b063 [19/Sep/2014:07:53:11 +0000] \"PUT /92221041-v1014211%2F20140914075120_15201610-mp4.mp4?acl HTTP/1.1\" 200 0 \"-\" \"Cyberduck/4.2.1 (Mac OS X/10.9.4) (i386)\" 0"
+  end
+
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Sep/2014:06:57:05 +0000] 89.99.28.243 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 465300DDC1822DE5 REST.GET.OBJECT 11723021/2014-09-17-1430.mp3 "GET /11723021/2014-09-17-1430.mp3?Signature=BanH0VrdfI%2FXCouvXFXivLBS2PE%3D&Expires=1411116501&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1" 304 - - 31128609 9 - "-" "AppleCoreMedia/1.0.0.11B554a (iPad; U; CPU OS 7_0_4 like Mac OS X; nl_nl)" -) do
+    insist { subject["message"] } == "89.99.28.243 - 2cf7e6b063 [19/Sep/2014:06:57:05 +0000] \"GET /11723021/2014-09-17-1430.mp3?Signature=BanH0VrdfI%2FXCouvXFXivLBS2PE%3D&Expires=1411116501&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1\" 304 0 \"-\" \"AppleCoreMedia/1.0.0.11B554a (iPad; U; CPU OS 7_0_4 like Mac OS X; nl_nl)\" 0"
+  end
+
+end
+
 describe "Custom s3_access_log filter solution" do
   extend LogStash::RSpec
 
@@ -192,6 +212,7 @@ describe "Custom s3_access_log filter solution" do
     it_behaves_like "rejects invalid log lines"
     it_behaves_like "convert REST.COPY.OBJECT_GET to POST"
     it_behaves_like "recalculate partial content"
+    it_behaves_like "handling regression cases"
   end
 
   describe "with recalculate_partial_content set to true" do
@@ -237,6 +258,7 @@ describe "Logstash grok and filter solution" do
     it_behaves_like "rejects invalid log lines"
     it_behaves_like "convert REST.COPY.OBJECT_GET to POST"
     it_behaves_like "recalculate partial content"
+    it_behaves_like "handling regression cases"
   end
 
 end
