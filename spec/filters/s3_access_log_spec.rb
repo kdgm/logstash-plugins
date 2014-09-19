@@ -12,7 +12,7 @@ def validate_s3_fields
   insist { subject['operation']          } != nil
   insist { subject['key']                } != nil
   insist { subject['request_uri']        } != nil
-  insist { subject['http_status']        } != nil
+  insist { subject['http_status']        } =~ /\A[0-9]*\z/
   insist { subject['bytes']              } =~ /\A[0-9]*\z/
   insist { subject['object_size']        } != nil
   insist { subject['total_time_ms']      } != nil
