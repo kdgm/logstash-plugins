@@ -10,11 +10,11 @@ def validate_icecast_fields
   insist { subject['verb']        } != nil
   insist { subject['request']     } != nil
   insist { subject['httpversion'] } != nil
-  insist { subject['response']    } != /\A[0-9]*\z/
-  insist { subject['bytes']       } != /\A[0-9]*\z/
+  insist { subject['response']    } =~ /\A[0-9]*\z/
+  insist { subject['bytes']       } =~ /\A[0-9]*\z/
   insist { subject['referrer']    } != nil
   insist { subject['agent']       } != nil
-  insist { subject['duration']    } != /\A[0-9]*\z/
+  insist { subject['duration']    } =~ /\A[0-9]*\z/
 end
 
 shared_examples "a valid icecast log parser" do
