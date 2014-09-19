@@ -61,6 +61,7 @@ module LogStash
           sample_event = [sample_event] unless sample_event.is_a?(Array)
           next sample_event.collect do |e|
             e = { "message" => e } if e.is_a?(String)
+            e['type'] ||= default_type rescue nil # default_type
             next LogStash::Event.new(e)
           end
         end
