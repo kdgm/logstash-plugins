@@ -8,7 +8,7 @@ Assuming the logstash repository is checked out in `../logstash`.
 To run the specs simply run `make` or `make spec`.
 
 	make
-    # this will run ../logstash/bin/logstash rspec spec/filters/s3_access_log_spec.rb 
+    # this will run ../logstash/bin/logstash rspec spec/**/*.rb 
 
     ............................................
 
