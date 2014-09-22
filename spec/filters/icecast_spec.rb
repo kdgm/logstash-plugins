@@ -54,7 +54,13 @@ describe "Icecast filters" do
       'logsource' => 'audio-test'
 
     # type 'syslog'
-    config [ 'filter{', File.read("conf.d/50_icecast.conf"), '}' ].join
+    config [
+      'filter{',
+        File.read("conf.d/10_drop.conf"),
+        File.read("conf.d/50_icecast.conf"),
+        File.read("conf.d/80_legacy.conf"),
+      '}'
+    ].join("\n")
 
     it_behaves_like "a valid icecast log parser"
   end
