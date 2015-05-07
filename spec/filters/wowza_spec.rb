@@ -24,6 +24,7 @@ shared_examples "a valid wowza log parser" do
     insist { subject['tags'] }.include? 'wowza_access_log'
     insist { subject['tags'] }.include? 'access_log_timestamp'
     insist { subject['tags'] }.include? 'billable'
+    insist { subject['tags'] }.include? 'import' unless nil == subject['path']
     insist { subject['bytes'] } == '1000'
     insist { subject['response'] } == '304'
     insist { subject['timestamp'] } == '19/Sep/2014:06:57:05 +0000'
@@ -53,8 +54,25 @@ describe "Wowza filters" do
       'program'   => 'wowza.access.log',
       'logsource' => 'video-test'
 
-    # type 'syslog'
-    config [ 'filter{', File.read("conf.d/60_wowza.conf"), '}' ].join
+    config [ 'filter{',
+      File.read("conf.d/55_import_wowza.conf"),
+      File.read("conf.d/60_wowza.conf"),
+    '}' ].join
+
+    it_behaves_like "a valid wowza log parser"
+  end
+
+  describe "with default config" do
+    let(:parse_failure_tag) { '_grokparsefailure'}
+
+    fields \
+      'type'  => 'import_wowza',
+      'path'      => 'video-test.log'
+
+    config [ 'filter{',
+      File.read("conf.d/55_import_wowza.conf"),
+      File.read("conf.d/60_wowza.conf"),
+    '}' ].join
 
     it_behaves_like "a valid wowza log parser"
   end
