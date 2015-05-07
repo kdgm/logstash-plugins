@@ -217,7 +217,7 @@ describe "Custom s3_access_log filter solution" do
     it_behaves_like "handling regression cases"
   end
 
-  describe "with recalculate_partial_content set to true" do
+  describe "with recalculate_partial_content set to false" do
     config %q(
       filter {
         mutate { rename => [ 'message', 's3_message' ] }
