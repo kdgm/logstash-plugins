@@ -22,6 +22,7 @@ def validate_188_203_183_17_request
   insist { subject['tags'] }.include? 'icecast_access_log'
   insist { subject['tags'] }.include? 'access_log_timestamp'
   insist { subject['tags'] }.include? 'billable'
+  insist { subject['tags'] }.include? 'import' unless nil == subject['path']
 
   insist { subject['bytes'] }       == '6918967'
   insist { subject['response'] }    == '200'
