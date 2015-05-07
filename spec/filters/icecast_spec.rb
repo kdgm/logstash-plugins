@@ -110,8 +110,8 @@ describe "Icecast filters" do
 
     config [
       'filter{',
+        File.read("conf.d/05_import_icecast.conf"),
         File.read("conf.d/10_drop.conf"),
-        File.read("conf.d/45_import_icecast.conf"),
         File.read("conf.d/50_icecast.conf"),
       '}'
     ].join("\n")
@@ -134,8 +134,8 @@ describe "Icecast filters" do
 
     config [
       'filter{',
+        File.read("conf.d/05_import_icecast.conf"),
         File.read("conf.d/10_drop.conf"),
-        File.read("conf.d/45_import_icecast.conf"),
         File.read("conf.d/50_icecast.conf"),
       '}'
     ].join("\n")

@@ -55,7 +55,7 @@ describe "Wowza filters" do
       'logsource' => 'video-test'
 
     config [ 'filter{',
-      File.read("conf.d/55_import_wowza.conf"),
+      File.read("conf.d/06_import_wowza.conf"),
       File.read("conf.d/60_wowza.conf"),
     '}' ].join
 
@@ -70,7 +70,7 @@ describe "Wowza filters" do
       'path'      => 'video-test.log'
 
     config [ 'filter{',
-      File.read("conf.d/55_import_wowza.conf"),
+      File.read("conf.d/06_import_wowza.conf"),
       File.read("conf.d/60_wowza.conf"),
     '}' ].join
 
