@@ -151,6 +151,7 @@ class LogStash::Filters::S3AccessLog < LogStash::Filters::Base
     def recalculate_partial_content!(event, max_kbitrate)
       if 206 == event['http_status'].to_i && ((event['bytes'].to_i*8)/event['total_time_ms'].to_i > 2000)
         event['bytes'] = [ 128 * 1024 + ((max_kbitrate/8000.0).round) * event['total_time_ms'].to_i, event['bytes'].to_i ].min # 128 K buffer + 3 bytes/msec = 3 kbytes/sec = 24 kbit/sec
+        event.tag RECALCULATED_TAG
       end
     end
 
@@ -196,6 +197,7 @@ class LogStash::Filters::S3AccessLog < LogStash::Filters::Base
   config :max_kbitrate, :validate => :number, :default => 24000
 
   PARSE_FAILURE_TAG = "_s3parsefailure".freeze
+  RECALCULATED_TAG = "bytes_recalculated".freeze
 
   public
   def register
