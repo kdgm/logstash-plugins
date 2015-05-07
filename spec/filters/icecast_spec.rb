@@ -58,7 +58,6 @@ describe "Icecast filters" do
       'filter{',
         File.read("conf.d/10_drop.conf"),
         File.read("conf.d/50_icecast.conf"),
-        File.read("conf.d/80_legacy.conf"),
       '}'
     ].join("\n")
 
