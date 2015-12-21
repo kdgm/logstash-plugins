@@ -205,6 +205,29 @@ shared_examples "handling regression cases" do
   sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Sep/2014:06:57:05 +0000] 89.99.28.243 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 465300DDC1822DE5 REST.GET.OBJECT 11723021/2014-09-17-1430.mp3 "GET /11723021/2014-09-17-1430.mp3?Signature=BanH0VrdfI%2FXCouvXFXivLBS2PE%3D&Expires=1411116501&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1" 304 - - 31128609 9 - "-" "AppleCoreMedia/1.0.0.11B554a (iPad; U; CPU OS 7_0_4 like Mac OS X; nl_nl)" -) do
     insist { subject["message"] } == "89.99.28.243 - 2cf7e6b063 [19/Sep/2014:06:57:05 +0000] \"GET /11723021/2014-09-17-1430.mp3?Signature=BanH0VrdfI%2FXCouvXFXivLBS2PE%3D&Expires=1411116501&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1\" 304 0 \"-\" \"AppleCoreMedia/1.0.0.11B554a (iPad; U; CPU OS 7_0_4 like Mac OS X; nl_nl)\" 0"
   end
+end
+
+shared_examples "drop unsigned accesses from vod-raven" do
+
+  # don't drop this
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Dec/2015:14:49:22 +0000] 95.96.20.131 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 93B36098060014B9 REST.GET.OBJECT 11506070-v1159918/20151216095500_15248755-mp4.mp4 "GET /11506070-v1159918/20151216095500_15248755-mp4.mp4?Signature=hQVMyGYcvev%2Fi8jndOOlWAzhQ8I%3D&Expires=1450543754&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1" 200 - 4852709 944933685 202 66 "http://kerkdienstgemist.nl/assets/1241862-Afscheidsdienst-dhr-J-de-Vos/embed" "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko" -) do
+    insist { subject["message"] } == "95.96.20.131 - 2cf7e6b063 [19/Dec/2015:14:49:22 +0000] \"GET /11506070-v1159918/20151216095500_15248755-mp4.mp4?Signature=hQVMyGYcvev%2Fi8jndOOlWAzhQ8I%3D&Expires=1450543754&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1\" 200 4852709 \"http://kerkdienstgemist.nl/assets/1241862-Afscheidsdienst-dhr-J-de-Vos/embed\" \"Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko\" 0"
+  end
+
+  # but drop this
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Dec/2015:14:49:22 +0000] 79.125.15.123 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 93B36098060014B9 REST.GET.OBJECT 11506070-v1159918/20151216095500_15248755-mp4.mp4 "GET /11506070-v1159918/20151216095500_15248755-mp4.mp4 HTTP/1.1" 200 - 4852709 944933685 202 66 "http://kerkdienstgemist.nl/assets/1241862-Afscheidsdienst-dhr-J-de-Vos/embed" "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko" -) do
+    insist { subject } == nil
+  end
+
+  # don't drop this
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Dec/2015:19:40:25 +0000] 77.167.232.181 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 49810B026E01F80E REST.GET.OBJECT 90701051-v1127425/20151217185400_15249572-mp4.mp4 "GET /90701051-v1127425/20151217185400_15249572-mp4.mp4?Signature=loSAbSlTKuvHBQDA%2Buph1Z1CdwE%3D&Expires=1450560528&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1" 206 - 8745905 1639187062 10424 42 "http://kerkdienstgemist.nl/playlists/9783/embed?media=video&playerheight=480" "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko" -) do
+    insist { subject["message"] } == "77.167.232.181 - 2cf7e6b063 [19/Dec/2015:19:40:25 +0000] \"GET /90701051-v1127425/20151217185400_15249572-mp4.mp4?Signature=loSAbSlTKuvHBQDA%2Buph1Z1CdwE%3D&Expires=1450560528&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1\" 206 162344 \"http://kerkdienstgemist.nl/playlists/9783/embed?media=video&playerheight=480\" \"Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko\" 10"
+  end
+
+  # but drop this
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Dec/2015:19:40:25 +0000] 77.167.232.181 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 49810B026E01F80E REST.GET.OBJECT 90701051-v1127425/20151217185400_15249572-mp4.mp4 "GET /90701051-v1127425/20151217185400_15249572-mp4.mp4 HTTP/1.1" 206 - 8745905 1639187062 10424 42 "http://kerkdienstgemist.nl/playlists/9783/embed?media=video&playerheight=480" "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko" -) do
+    insist { subject } == nil
+  end
 
 end
 
@@ -223,6 +246,7 @@ describe "Custom s3_access_log filter solution" do
     it_behaves_like "convert REST.COPY.OBJECT_GET to POST"
     it_behaves_like "recalculate partial content"
     it_behaves_like "handling regression cases"
+    it_behaves_like "drop unsigned accesses from vod-raven"
   end
 
   describe "with recalculate_partial_content set to false" do
