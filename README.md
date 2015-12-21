@@ -17,7 +17,7 @@ To run the specs simply run `make` or `make spec`. This will run all specs in sp
 
     $ HOME=`pwd` ../logstash/bin/logstash rspec spec/filters/icecast_spec.rb
     ...........
-    
+
     Finished in 11.23 seconds
     11 examples, 0 failures
 
