@@ -55,7 +55,7 @@ shared_examples "converts valid S3 Server Access Log lines into Apache CLF forma
     insist { subject["tags"] }.include? 's3_timestamp'
     insist { subject["tags"] & [ 'billable' ] } == []
     insist { subject["timestamp"] } == '04/Jun/2012:16:44:26 +0000'
-  end 
+  end
 
   sample %(9ab8c3813615ea8387cf4cc559958ec02531c04954bbbf924321656cc030bce3 n-e-w-legacy [04/Jun/2012:16:44:26 +0000] 10.2.7.13 9ab8c3813615ea8387cf4cc559958ec02531c04954bbbf924321656cc030bce3 F5FB585AB1B363ED REST.GET.BUCKET - "GET /n-e-w-legacy?prefix=&max-keys=100&marker=&delimiter=/ HTTP/1.1" 200 - 434 - 35 35 "-" "S3Console/0.4" -) do
     insist { subject["message"] } == "10.2.7.13 - 9ab8c38136 [04/Jun/2012:16:44:26 +0000] \"GET /n-e-w-legacy?prefix=&max-keys=100&marker=&delimiter=/ HTTP/1.1\" 200 434 \"-\" \"S3Console/0.4\" 0"
@@ -231,6 +231,28 @@ shared_examples "drop unsigned accesses from vod-raven" do
 
 end
 
+shared_examples "drop requests for images" do
+
+  # drop .svg poster image
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Oct/2019:16:49:23 +0000] 94.214.154.36 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 8981914CC7324702 REST.GET.OBJECT 10522060/2019-09-29-1820/poster_thumb.svg "GET /media.kerkdienstgemist.nl/10522060/2019-09-29-1820/poster_thumb.svg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=1VYKRTJ5FFKT5B6F4NR2%2F20191019%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20191019T164922Z&X-Amz-Expires=10800&X-Amz-SignedHeaders=host&X-Amz-Signature=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX HTTP/1.1" 200 - 2546 2546 38 38 "https://beta.kerkdienstgemist.nl/stations/150-Hervormde-Gemeente-Bleskensgraaf/events/live" "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36" - GbgC6AC+f3LX2JovtQZ1zxMKnLxlaWK8pNFwkuJsg96BL/lCGJ+HUXLKAQLrPYG+PNg/Gmxkwak= SigV4 ECDHE-RSA-AES128-GCM-SHA256 QueryString s3.eu-west-1.amazonaws.com TLSv1.2) do
+    insist { subject } == nil
+  end
+
+  # drop .jpg upload
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Oct/2019:17:14:49 +0000] 34.245.174.106 148c961344704acc761dd011016226d36f06f24ff6bb890beb414040f1f866a6 DAA2447D01DBB414 REST.HEAD.OBJECT 10104090/upload/82ca8ef474c4a7b1651731ac90ec2ce1_1.jpg "HEAD /media.kerkdienstgemist.nl/10104090/upload/82ca8ef474c4a7b1651731ac90ec2ce1_1.jpg HTTP/1.1" 404 NoSuchKey 325 - 4 - "-" "fog/1.37.0 fog-core/1.42.0" - f0hrDe0SG296vuOclyAFFpeZ/agYlG6YpsfsZfc+PXJB9fCBMAxTLjOH3xrdXFw38qkd6ugx+gw= SigV4 ECDHE-RSA-AES128-GCM-SHA256 AuthHeader s3-eu-west-1.amazonaws.com TLSv1.2) do
+    insist { subject } == nil
+  end
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [29/Sep/2019:07:06:39 +0000] 84.87.16.86 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 36BD23E9C1A89753 REST.GET.OBJECT 10202180-v1520443/20190901165800_15273346-mp4/poster_small.jpg "GET /media.kerkdienstgemist.nl/10202180-v1520443/20190901165800_15273346-mp4/poster_small.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=1VYKRTJ5FFKT5B6F4NR2%2F20190929%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20190929T070639Z&X-Amz-Expires=10800&X-Amz-SignedHeaders=host&X-Amz-Signature=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX HTTP/1.1" 200 - 9423 9423 18 18 "https://beta.kerkdienstgemist.nl/" "Mozilla/5.0 (iPad; CPU OS 12_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.2 Mobile/15E148 Safari/604.1" - g5HrxUw9U25o+kpS29O8TtMRZgWrC+/JPG/LmUva3CTGLWjitZD1zc0/UUlBaqGSZgf/nh8Dcwg= SigV4 ECDHE-RSA-AES128-GCM-SHA256 QueryString s3.eu-west-1.amazonaws.com TLSv1.2) do
+    insist { subject } == nil
+  end
+
+  # drop requests for .png
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Oct/2019:16:58:39 +0000] 145.132.86.71 - 097C7E137F28E7E1 REST.GET.OBJECT apple-touch-icon-152x152.png "GET /apple-touch-icon-152x152.png HTTP/1.1" 403 AccessDenied 243 - 4 - "-" "MobileSafari/604.1 CFNetwork/901.1 Darwin/17.6.0" - DHRF/yI6kSrtg1gFEiWE4XUQqDo2JVt6IXhVDjWjigKgSZuDY1tMhlhgBfLunDge8ifmRZd2XYA= - - - media.kerkdienstgemist.nl -) do
+    insist { subject } == nil
+  end
+
+end
+
 describe "Custom s3_access_log filter solution" do
   extend LogStash::RSpec
 
@@ -247,6 +269,7 @@ describe "Custom s3_access_log filter solution" do
     it_behaves_like "recalculate partial content"
     it_behaves_like "handling regression cases"
     it_behaves_like "drop unsigned accesses from vod-raven"
+    it_behaves_like "drop requests for images"
   end
 
   describe "with recalculate_partial_content set to false" do
