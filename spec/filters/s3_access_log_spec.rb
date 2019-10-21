@@ -229,7 +229,7 @@ shared_examples "drop unsigned accesses from vod-raven" do
 
   # don't drop this
   sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Dec/2015:19:40:25 +0000] 77.167.232.181 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 49810B026E01F80E REST.GET.OBJECT 90701051-v1127425/20151217185400_15249572-mp4.mp4 "GET /90701051-v1127425/20151217185400_15249572-mp4.mp4?Signature=loSAbSlTKuvHBQDA%2Buph1Z1CdwE%3D&Expires=1450560528&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1" 206 - 8745905 1639187062 10424 42 "http://kerkdienstgemist.nl/playlists/9783/embed?media=video&playerheight=480" "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko" -) do
-    insist { subject["message"] } == "77.167.232.181 - 2cf7e6b063 [19/Dec/2015:19:40:25 +0000] \"GET /90701051-v1127425/20151217185400_15249572-mp4.mp4?Signature=loSAbSlTKuvHBQDA%2Buph1Z1CdwE%3D&Expires=1450560528&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1\" 206 162344 \"http://kerkdienstgemist.nl/playlists/9783/embed?media=video&playerheight=480\" \"Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko\" 10"
+    insist { subject["message"] } == "77.167.232.181 - 2cf7e6b063 [19/Dec/2015:19:40:25 +0000] \"GET /90701051-v1127425/20151217185400_15249572-mp4.mp4?Signature=loSAbSlTKuvHBQDA%2Buph1Z1CdwE%3D&Expires=1450560528&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1\" 206 8745905 \"http://kerkdienstgemist.nl/playlists/9783/embed?media=video&playerheight=480\" \"Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko\" 10"
   end
 
   # but drop this
