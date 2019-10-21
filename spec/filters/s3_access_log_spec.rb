@@ -137,7 +137,7 @@ shared_examples "convert REST.COPY.OBJECT_GET to POST" do
 
 end
 
-shared_examples "recalculate partial content" do
+shared_examples "recalculate partial content enabled" do
 
   sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [02/Oct/2010:18:29:16 +0000] 82.168.113.55 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 4F911681022807C6 REST.GET.OBJECT 10028050/2010-09-26-1830.mp3 "GET /10028050/2010-09-26-1830.mp3?Signature=E3ehd6nkXjNg7vr%2F4b3LtxCWads%3D&Expires=1286051333&AWSAccessKeyId=AKIAI3XHXJPFSJW2UQAQ HTTP/1.1" 206 - 4194304 17537676 1600 12 "-" "VLC media player - version 1.0.5 Goldeneye - (c) 1996-2010 the VideoLAN team" -) do
     insist { subject["message"] } == "82.168.113.55 - 2cf7e6b063 [02/Oct/2010:18:29:16 +0000] \"GET /10028050/2010-09-26-1830.mp3?Signature=E3ehd6nkXjNg7vr%2F4b3LtxCWads%3D&Expires=1286051333&AWSAccessKeyId=AKIAI3XHXJPFSJW2UQAQ HTTP/1.1\" 206 135872 \"-\" \"VLC media player - version 1.0.5 Goldeneye - (c) 1996-2010 the VideoLAN team\" 2"
@@ -151,12 +151,20 @@ shared_examples "recalculate partial content" do
     subject["tags"].should_not include("bytes_recalculated")
   end
 
+
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Oct/2019:15:31:08 +0000] 86.80.226.203 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 BCA2E0AB004F2273 REST.GET.OBJECT 10026021-v1520329/20191018085700_15530042-mp4.mp4 "GET /media.kerkdienstgemist.nl/10026021-v1520329/20191018085700_15530042-mp4.mp4?response-content-disposition=attachment%3Bfilename%3D2019-10-18-1100.mp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=1VYKRTJ5FFKT5B6F4NR2%2F20191019%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20191019T134605Z&X-Amz-Expires=10800&X-Amz-SignedHeaders=host&X-Amz-Signature=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX HTTP/1.1" 206 - 6854150 1251270047 267 89 "-" "Mozilla/5.0 (iPad; CPU OS 13_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/85.0.274229539 Mobile/15E148 Safari/605.1" - 6eClMtcuQ4C/qVCroMFqlP+UhkS52mjgDEhIKB5QKd+jCd0Pd9RADkMb0T4hjstZZBlzyFkvQJk= SigV4 ECDHE-RSA-AES128-GCM-SHA256 QueryString s3.eu-west-1.amazonaws.com TLSv1.2) do
+    insist { subject["bytes"].to_i } == 6854150
+    subject["tags"].should_not include("bytes_recalculated")
+    subject["tags"].should_not include(parse_failure_tag)
+  end
+
 end
 
-shared_examples "don't recalculate partial content" do
+shared_examples "recalculate partial content disabled" do
 
   sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [02/Oct/2010:18:29:16 +0000] 82.168.113.55 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 4F911681022807C6 REST.GET.OBJECT 10028050/2010-09-26-1830.mp3 "GET /10028050/2010-09-26-1830.mp3?Signature=E3ehd6nkXjNg7vr%2F4b3LtxCWads%3D&Expires=1286051333&AWSAccessKeyId=AKIAI3XHXJPFSJW2UQAQ HTTP/1.1" 206 - 4194304 17537676 1600 12 "-" "VLC media player - version 1.0.5 Goldeneye - (c) 1996-2010 the VideoLAN team" -) do
     insist { subject["message"] } == "82.168.113.55 - 2cf7e6b063 [02/Oct/2010:18:29:16 +0000] \"GET /10028050/2010-09-26-1830.mp3?Signature=E3ehd6nkXjNg7vr%2F4b3LtxCWads%3D&Expires=1286051333&AWSAccessKeyId=AKIAI3XHXJPFSJW2UQAQ HTTP/1.1\" 206 4194304 \"-\" \"VLC media player - version 1.0.5 Goldeneye - (c) 1996-2010 the VideoLAN team\" 2"
+    insist { subject["bytes"].to_i } == 4194304
   end
 
 end
@@ -221,7 +229,7 @@ shared_examples "drop unsigned accesses from vod-raven" do
 
   # don't drop this
   sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Dec/2015:19:40:25 +0000] 77.167.232.181 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 49810B026E01F80E REST.GET.OBJECT 90701051-v1127425/20151217185400_15249572-mp4.mp4 "GET /90701051-v1127425/20151217185400_15249572-mp4.mp4?Signature=loSAbSlTKuvHBQDA%2Buph1Z1CdwE%3D&Expires=1450560528&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1" 206 - 8745905 1639187062 10424 42 "http://kerkdienstgemist.nl/playlists/9783/embed?media=video&playerheight=480" "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko" -) do
-    insist { subject["message"] } == "77.167.232.181 - 2cf7e6b063 [19/Dec/2015:19:40:25 +0000] \"GET /90701051-v1127425/20151217185400_15249572-mp4.mp4?Signature=loSAbSlTKuvHBQDA%2Buph1Z1CdwE%3D&Expires=1450560528&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1\" 206 162344 \"http://kerkdienstgemist.nl/playlists/9783/embed?media=video&playerheight=480\" \"Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko\" 10"
+    insist { subject["message"] } == "77.167.232.181 - 2cf7e6b063 [19/Dec/2015:19:40:25 +0000] \"GET /90701051-v1127425/20151217185400_15249572-mp4.mp4?Signature=loSAbSlTKuvHBQDA%2Buph1Z1CdwE%3D&Expires=1450560528&AWSAccessKeyId=1VYKRTJ5FFKT5B6F4NR2 HTTP/1.1\" 206 8745905 \"http://kerkdienstgemist.nl/playlists/9783/embed?media=video&playerheight=480\" \"Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko\" 10"
   end
 
   # but drop this
@@ -266,7 +274,7 @@ describe "Custom s3_access_log filter solution" do
     it_behaves_like "converts valid S3 Server Access Log lines into Apache CLF format"
     it_behaves_like "rejects invalid log lines"
     it_behaves_like "convert REST.COPY.OBJECT_GET to POST"
-    it_behaves_like "recalculate partial content"
+    it_behaves_like "recalculate partial content enabled"
     it_behaves_like "handling regression cases"
     it_behaves_like "drop unsigned accesses from vod-raven"
     it_behaves_like "drop requests for images"
@@ -282,7 +290,7 @@ describe "Custom s3_access_log filter solution" do
         }
       }
     )
-    it_behaves_like "don't recalculate partial content"
+    it_behaves_like "recalculate partial content disabled"
   end
 
   describe "with copy_operation set to 'drop'" do
@@ -313,7 +321,7 @@ describe "Logstash grok and filter solution" do
     it_behaves_like "converts valid S3 Server Access Log lines into Apache CLF format"
     it_behaves_like "rejects invalid log lines"
     it_behaves_like "convert REST.COPY.OBJECT_GET to POST"
-    it_behaves_like "recalculate partial content"
+    it_behaves_like "recalculate partial content enabled"
     it_behaves_like "handling regression cases"
   end
 
