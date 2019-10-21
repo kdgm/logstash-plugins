@@ -151,6 +151,13 @@ shared_examples "recalculate partial content enabled" do
     subject["tags"].should_not include("bytes_recalculated")
   end
 
+
+  sample %(2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 media.kerkdienstgemist.nl [19/Oct/2019:15:31:08 +0000] 86.80.226.203 2cf7e6b06335c0689c6d29163df5bb001c96870cd78609e3845f1ed76a632621 BCA2E0AB004F2273 REST.GET.OBJECT 10026021-v1520329/20191018085700_15530042-mp4.mp4 "GET /media.kerkdienstgemist.nl/10026021-v1520329/20191018085700_15530042-mp4.mp4?response-content-disposition=attachment%3Bfilename%3D2019-10-18-1100.mp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=1VYKRTJ5FFKT5B6F4NR2%2F20191019%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20191019T134605Z&X-Amz-Expires=10800&X-Amz-SignedHeaders=host&X-Amz-Signature=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX HTTP/1.1" 206 - 6854150 1251270047 267 89 "-" "Mozilla/5.0 (iPad; CPU OS 13_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/85.0.274229539 Mobile/15E148 Safari/605.1" - 6eClMtcuQ4C/qVCroMFqlP+UhkS52mjgDEhIKB5QKd+jCd0Pd9RADkMb0T4hjstZZBlzyFkvQJk= SigV4 ECDHE-RSA-AES128-GCM-SHA256 QueryString s3.eu-west-1.amazonaws.com TLSv1.2) do
+    insist { subject["bytes"].to_i } == 6854150
+    subject["tags"].should_not include("bytes_recalculated")
+    subject["tags"].should_not include(parse_failure_tag)
+  end
+
 end
 
 shared_examples "recalculate partial content disabled" do
