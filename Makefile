@@ -2,7 +2,7 @@ default: spec
 
 .PHONY: spec
 spec:
-	HOME=`pwd` ../logstash/bin/logstash rspec spec/**/*.rb
+	HOME=`pwd` ../logstash/bin/logstash rspec spec
 
 # brew install fswatch
 watch:
