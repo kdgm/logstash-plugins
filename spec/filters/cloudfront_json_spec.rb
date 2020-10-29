@@ -66,7 +66,7 @@ EOF
 
 shared_examples "adds a fingerprint" do
   sample(JSON_SAMPLE) do
-    insist { subject['fingerprint'] } == '24.132.188.152|+|GET|+|/vodcdn/_definst_/mp4:amazons3/media.kerkdienstgemist.nl/90311151-v1520373/20201010085600_15620922-mp4.mp4|+|HTTP/2.0|+|200...'
+    insist { subject['fingerprint'] } == 'a9aa8922a71d35ea026c8fb39344acaf'
   end
 end
 
