@@ -84,8 +84,8 @@ describe 'Cloudfront filter' do
     let(:parse_failure_tag) { '_s3parsefailure'}
 
     fields \
-      'type'  => 'cloudfront_json',
-      'host'  => 'cf-logging',
+      'type' => 'cloudfront_json',
+      'host' => 'cf-logging',
       'codec' => 'json'
 
     config ['filter{', File.read('conf.d/80_cloudfront_json.conf'), '}'].join
