@@ -1,7 +1,6 @@
 require './spec/test_utils'
 
 def validate_cloudfront_json_fields
-
   # # fields from S3_ACCESS_LOG
   # insist { subject['owner']              } != nil
   # insist { subject['bucket']             } != nil
@@ -71,20 +70,17 @@ shared_examples "adds a fingerprint" do
 end
 
 shared_examples 'converts Cloudfront JSON sessions into Apache CLF format' do
-
   sample(JSON_SAMPLE) do
     insist { subject['_source']['logsource'] } == ['AMS50-C1']
 
     # validate_cloudfront_json_fields
   end
-
 end
 
 describe 'Cloudfront filter' do
   extend LogStash::RSpec
 
   describe 'with default config' do
-
     let(:parse_failure_tag) { '_s3parsefailure'}
 
     fields \
@@ -97,5 +93,4 @@ describe 'Cloudfront filter' do
     it_behaves_like 'adds a fingerprint'
     it_behaves_like 'converts Cloudfront JSON sessions into Apache CLF format'
   end
-
 end
