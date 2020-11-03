@@ -6,7 +6,7 @@ spec:
 
 # brew install fswatch
 watch:
-	fswatch spec | xargs -L1 make spec
+	fswatch spec conf.d | xargs -L1 make spec
 
 agent:
 	HOME=`pwd` ../logstash/bin/logstash --pluginpath lib -f conf.d -v
