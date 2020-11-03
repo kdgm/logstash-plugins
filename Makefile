@@ -10,3 +10,6 @@ watch:
 
 agent:
 	HOME=`pwd` ../logstash/bin/logstash --pluginpath lib -f conf.d -v
+
+cloudfront:
+	HOME=`pwd` cat import/cloudfront/esdump.json | ../logstash/bin/logstash --pluginpath lib -f conf.d --quiet
