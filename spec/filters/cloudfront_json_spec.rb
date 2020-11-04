@@ -81,7 +81,7 @@ describe 'Cloudfront filter' do
   extend LogStash::RSpec
 
   describe 'with default config' do
-    let(:parse_failure_tag) { '_s3parsefailure'}
+    let(:parse_failure_tag) { '_s3parsefailure' }
 
     fields \
       'type' => 'cloudfront_json',
