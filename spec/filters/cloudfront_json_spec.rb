@@ -81,7 +81,7 @@ describe 'Cloudfront filter', if: RUBY_ENGINE == 'jruby' do
       insist { subject['@timestamp'] } == Time.parse('2020-10-26T00:14:16.000+0000')
 
       # adds program field
-      insist { subject['program'] } == 'elasticdump'
+      insist { subject['program'] } == 'cloudfront.sessions.log'
 
       # httpversion from protocol
       insist { subject['httpversion'] } == '2.0'
