@@ -1,30 +1,5 @@
 require './spec/test_utils'
 
-def validate_cloudfront_json_fields
-  # # fields from S3_ACCESS_LOG
-  # insist { subject['owner']              } != nil
-  # insist { subject['bucket']             } != nil
-  # insist { subject['timestamp']          } != nil
-  # insist { subject['remote_ip']          } != nil
-  # insist { subject['requester']          } != nil
-  # insist { subject['request_id']         } != nil
-  # insist { subject['operation']          } != nil
-  # insist { subject['key']                } != nil
-  # insist { subject['request_uri']        } != nil
-  # insist { subject['http_status']        } =~ /\A[0-9]*\z/
-  # insist { subject['bytes']              } =~ /\A[0-9]*\z/
-  # insist { subject['object_size']        } != nil
-  # insist { subject['total_time_ms']      } != nil
-  # insist { subject['turnaround_time_ms'] } != nil
-  # insist { subject['referrer']           } != nil
-  # insist { subject['agent']              } != nil
-
-  # # fields from S3_REQUEST_LINE
-  # insist { subject['verb']               } != nil
-  # insist { subject['request']            } != nil
-  # insist { subject['httpversion']        } != nil
-end
-
 JSON_SAMPLE = JSON.parse(<<JSON_DOC
   {
     "_index": "cloudfront_sessions-20201026",
