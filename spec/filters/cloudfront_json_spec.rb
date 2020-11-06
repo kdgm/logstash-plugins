@@ -43,7 +43,7 @@ describe 'Cloudfront filter', if: RUBY_ENGINE == 'jruby' do
     let(:parse_failure_tag) { '_s3parsefailure' }
 
     fields \
-      'type' => 'cloudfront_json',
+      'type' => 'cloudfront_session',
       'host' => 'cf-logging',
       'codec' => 'json'
 
@@ -100,7 +100,7 @@ describe 'Cloudfront filter', if: RUBY_ENGINE == 'jruby' do
       }
 
       # adds correct fingerprint (based on kafka_key)
-      insist { subject['fingerprint'] } == 'a9aa8922a71d35ea026c8fb39344acaf'
+      insist { subject['fingerprint'] } == 'd0defb65dc12fa4c8636ef9de0493462'
     end
   end
 end
