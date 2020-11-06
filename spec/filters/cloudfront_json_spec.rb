@@ -1,23 +1,21 @@
 require './spec/test_utils'
 
-JSON_SAMPLE = JSON.parse(<<JSON_DOC
+VODCDN_SESSION_SAMPLE = JSON.parse(<<JSON_DOC
   {
     "_index": "cloudfront_sessions-20201026",
     "_type": "_doc",
     "_id": "24.132.188.152|+|GET|+|/vodcdn/_definst_/mp4:amazons3/media.kerkdienstgemist.nl/90311151-v1520373/20201010085600_15620922-mp4.mp4|+|HTTP/2.0|+|200...",
     "_score": 1,
     "_source": {
-      "session_start": "2020-10-26T00:13:53.000+0000",
-      "timestamp": "2020-10-26T00:14:16.000+0000",
+      "start_time": "2020-10-26T00:13:53.000+0000",
+      "end_time": "2020-10-26T00:14:16.000+0000",
       "clientip": "24.132.188.152",
       "verb": "GET",
       "request": "/vodcdn/_definst_/mp4:amazons3/media.kerkdienstgemist.nl/90311151-v1520373/20201010085600_15620922-mp4.mp4",
       "protocol": "HTTP/2.0",
       "response": "200",
-      "agent": [
-        "AppleCoreMedia/1.0.0.16G201 (iPad; U; CPU OS 12_4_8 like Mac OS X; nl_nl)"
-      ],
-      "referer": [
+      "agent": "AppleCoreMedia/1.0.0.16G201 (iPad; U; CPU OS 12_4_8 like Mac OS X; nl_nl)",
+      "referrer": [
         "https://kerkdienstgemist.nl/stations/1419/events/recording/160232040001419"
       ],
       "session_id": "24.132.188.152#GET#/vodcdn/_definst_/mp4:amazons3/media.kerkdienstgemist.nl/90311151-v1520373/20201010085600_15620922-mp4.mp4#HTTP/2.0#200#1603671233000#1603671256000",
@@ -38,21 +36,7 @@ JSON_SAMPLE = JSON.parse(<<JSON_DOC
 JSON_DOC
 )
 
-shared_examples "adds a fingerprint" do
-  sample(JSON_SAMPLE) do
-    insist { subject['fingerprint'] } == 'a9aa8922a71d35ea026c8fb39344acaf'
-  end
-end
-
-shared_examples 'converts Cloudfront JSON sessions into Apache CLF format' do
-  sample(JSON_SAMPLE) do
-    insist { subject['_source']['logsource'] } == ['AMS50-C1']
-
-    # validate_cloudfront_json_fields
-  end
-end
-
-describe 'Cloudfront filter' do
+describe 'Cloudfront filter', if: RUBY_ENGINE == 'jruby' do
   extend LogStash::RSpec
 
   describe 'with default config' do
@@ -63,9 +47,50 @@ describe 'Cloudfront filter' do
       'host' => 'cf-logging',
       'codec' => 'json'
 
-    config ['filter{', File.read('conf.d/80_cloudfront_json.conf'), '}'].join
+    config <<-CONFIG
+      filter{
+        #{File.read('conf.d/80_cloudfront_json.conf')}
+      }
+    CONFIG
 
-    it_behaves_like 'adds a fingerprint'
-    it_behaves_like 'converts Cloudfront JSON sessions into Apache CLF format'
+    sample(VODCDN_SESSION_SAMPLE) do
+      # fix time to specific point in time
+      allow(Time).to receive(:now).and_return(Time.parse('2020-11-04T00:04:10.000+0000'))
+
+      # ruby filter specs
+      insist { subject['received_at'] }  == Time.now
+      insist { subject['kafka_key'] }    == '24.132.188.152|+|GET|+|/vodcdn/_definst_/mp4:amazons3/media.kerkdienstgemist.nl/90311151-v1520373/20201010085600_15620922-mp4.mp4|+|HTTP/2.0|+|200...'
+      insist { subject['source_index'] } == 'cloudfront_sessions-20201026'
+      insist { subject['start_time'] }   == '2020-10-26T00:13:53.000+0000'
+      insist { subject['end_time'] }     == '2020-10-26T00:14:16.000+0000'
+      insist { subject['clientip'] }     == '24.132.188.152'
+      insist { subject['verb'] }         == 'GET'
+      insist { subject['request'] }      == '/vodcdn/_definst_/mp4:amazons3/media.kerkdienstgemist.nl/90311151-v1520373/20201010085600_15620922-mp4.mp4'
+      insist { subject['protocol'] }     == 'HTTP/2.0'
+      insist { subject['response'] }     == '200'
+      insist { subject['agent'] }        == 'AppleCoreMedia/1.0.0.16G201 (iPad; U; CPU OS 12_4_8 like Mac OS X; nl_nl)'
+      insist { subject['referrer'] }     == ['https://kerkdienstgemist.nl/stations/1419/events/recording/160232040001419']
+      insist { subject['bytes'] }        == 42_048_967
+      insist { subject['duration'] }     == 23
+      insist { subject['logsource'] }    == ['AMS50-C1']
+      insist { subject['kbps'] }         == 14_282
+      insist { subject['hls_files'] }    == { 'playlist' => 1, 'chunklist' => 1, 'media' => 16 }
+      insist { subject['count'] }        == 18
+
+      # parses end_time into @timstamp
+      insist { subject['@timestamp'] } == Time.parse('2020-10-26T00:14:16.000+0000')
+
+      # adds program field
+      insist { subject['program'] } == 'elasticdump'
+
+      # httpversion from protocol
+      insist { subject['httpversion'] } == '2.0'
+
+      # adds appropriate tag
+      insist { subject['tags'] } == %w[cloudfront_timestamp billable geoip protocol]
+
+      # adds correct fingerprint (based on kafka_key)
+      insist { subject['fingerprint'] } == 'a9aa8922a71d35ea026c8fb39344acaf'
+    end
   end
 end
