@@ -89,6 +89,16 @@ describe 'Cloudfront filter', if: RUBY_ENGINE == 'jruby' do
       # adds appropriate tag
       insist { subject['tags'] } == %w[cloudfront_timestamp billable geoip protocol]
 
+      # check geoip info
+      insist { subject['geoip'] } == {
+        'ip' => '24.132.188.152',
+        'country_code' => 161,
+        'country_code2' => 'NL',
+        'country_code3' => 'NLD',
+        'country_name' => 'Netherlands',
+        'continent_code' => 'EU'
+      }
+
       # adds correct fingerprint (based on kafka_key)
       insist { subject['fingerprint'] } == 'a9aa8922a71d35ea026c8fb39344acaf'
     end
