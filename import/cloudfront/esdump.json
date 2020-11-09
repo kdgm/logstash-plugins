@@ -18,7 +18,7 @@
     "duration": 381,
     "logsource": ["SFO20-C1", "LAX3-C4"],
     "kbps": 4405,
-    "hls_files": { "playlist": 1, "chunklist": 1, "media": 42 },
+    "hls": { "playlist": 1, "chunklist": 2, "media": 42 },
     "count": 44
   }
 }

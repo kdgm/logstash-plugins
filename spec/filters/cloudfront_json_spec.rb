@@ -25,12 +25,12 @@ VODCDN_SESSION_SAMPLE = JSON.parse(<<JSON_DOC
         "AMS50-C1"
       ],
       "kbps": 14282,
-      "hls_files": {
+      "hls": {
         "playlist": 1,
-        "chunklist": 1,
+        "chunklist": 2,
         "media": 16
       },
-      "count": 18
+      "count": 19
     }
   }
 JSON_DOC
@@ -74,8 +74,8 @@ describe 'Cloudfront filter', if: RUBY_ENGINE == 'jruby' do
       insist { subject['duration'] }     == 23
       insist { subject['logsource'] }    == ['AMS50-C1']
       insist { subject['kbps'] }         == 14_282
-      insist { subject['hls_files'] }    == { 'playlist' => 1, 'chunklist' => 1, 'media' => 16 }
-      insist { subject['count'] }        == 18
+      insist { subject['hls'] }          == { 'playlist' => 1, 'chunklist' => 2, 'media' => 16 }
+      insist { subject['count'] }        == 19
 
       # parses end_time into @timstamp
       insist { subject['@timestamp'] } == Time.parse('2020-10-26T00:14:16.000+0000')
