@@ -83,6 +83,11 @@ describe 'Cloudfront filter', if: RUBY_ENGINE == 'jruby' do
       # adds program field
       insist { subject['program'] } == 'cloudfront.sessions.log'
 
+      # adds a message field containing Apache Common Log format version of the log line
+      insist { subject['message'] } == \
+        '24.132.188.152 - - [26/Oct/2020:01:14:16 +0100] "GET /vodcdn/_definst_/mp4:amazons3/media.kerkdienstgemist.nl/90311151-v1520373/20201010085600_15620922-mp4.mp4 HTTP/2.0" 200 42048967 "https://kerkdienstgemist.nl/stations/1419/events/recording/160232040001419" "AppleCoreMedia/1.0.0.16G201 (iPad; U; CPU OS 12_4_8 like Mac OS X; nl_nl)" 23'
+      insist { subject['httpdate'] } == nil
+
       # httpversion from protocol
       insist { subject['httpversion'] } == '2.0'
 
