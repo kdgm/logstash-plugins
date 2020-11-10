@@ -114,6 +114,12 @@ describe 'Cloudfront filter', if: RUBY_ENGINE == 'jruby' do
       insist { subject['message'] } =~ %r{hls=0/0/0/0}
     end
 
+    # should set default value (0) for values not set
+    sample('_source' => { 'hls' => { 'playlist' => 1 }, 'count' => 0 }) do
+      insist { subject['hls'] } == { 'playlist' => 1, 'chunklist' => 0, 'media' => 0 }
+      insist { subject['message'] } =~ %r{hls=1/0/0/0}
+    end
+
     # should not set billable tag for non client related request
     sample('_source' => { 'request' => '/test' }) do
       insist { subject['tags'] & ['billable'] } == []
