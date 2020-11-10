@@ -113,5 +113,15 @@ describe 'Cloudfront filter', if: RUBY_ENGINE == 'jruby' do
       insist { subject['hls'] } == {}
       insist { subject['message'] } =~ %r{hls=0/0/0/0}
     end
+
+    # should not set billable tag for non client related request
+    sample('_source' => { 'request' => '/test' }) do
+      insist { subject['tags'] & ['billable'] } == []
+    end
+
+    # should  set billable tag for video stream related request
+    sample('_source' => { 'request' => '/12345678' }) do
+      insist { subject['tags'] }.include? 'billable'
+    end
   end
 end
