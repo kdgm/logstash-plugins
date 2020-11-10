@@ -107,5 +107,11 @@ describe 'Cloudfront filter', if: RUBY_ENGINE == 'jruby' do
       # adds correct fingerprint (based on kafka_key)
       insist { subject['fingerprint'] } == 'd0defb65dc12fa4c8636ef9de0493462'
     end
+
+    # should set default value (0) for playlist, chunklist and media count
+    sample('_source' => { 'count' => 0 }) do
+      insist { subject['hls'] } == {}
+      insist { subject['message'] } =~ %r{hls=0/0/0/0}
+    end
   end
 end
