@@ -1,0 +1,24 @@
+{
+  "_index": "cloudfront_sessions-20201026",
+  "_type": "_doc",
+  "_id": "73.189.38.110|+|GET|+|/vodcdn/_definst_/mp4:amazons3/media.kerkdienstgemist.nl/10612070-v1065797/20201025082219_15124258-mp4.mp4|+|HTTP/2.0|+|200\u0000\u0000\u0001uc\u001a^�\u0000\u0000\u0001uc\u0014��",
+  "_score": 1,
+  "_source": {
+    "start_time": "2020-10-26T04:04:53.000+0000",
+    "end_time": "2020-10-26T04:11:14.000+0000",
+    "clientip": "73.189.38.110",
+    "verb": "GET",
+    "request": "/vodcdn/_definst_/mp4:amazons3/media.kerkdienstgemist.nl/10612070-v1065797/20201025082219_15124258-mp4.mp4",
+    "protocol": "HTTP/2.0",
+    "response": "200",
+    "agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 ADG/11.0.2899 Safari/537.36",
+    "referrer": [ "https://kerkdienstgemist.nl/stations/289/events/recording/160361460000289" ],
+    "session_id": "73.189.38.110#GET#/vodcdn/_definst_/mp4:amazons3/media.kerkdienstgemist.nl/10612070-v1065797/20201025082219_15124258-mp4.mp4#HTTP/2.0#200#1603685093000#1603685474000",
+    "bytes": 214824390,
+    "duration": 381,
+    "logsource": ["SFO20-C1", "LAX3-C4"],
+    "kbps": 4405,
+    "hls": { "playlist": 1, "chunklist": 2, "media": 42 },
+    "count": 45
+  }
+}
