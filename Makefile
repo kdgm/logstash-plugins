@@ -2,7 +2,14 @@ default: spec
 
 .PHONY: spec
 spec:
-	HOME=`pwd` ../logstash/bin/logstash rspec spec/**/*.rb
+	HOME=`pwd` ../logstash/bin/logstash rspec spec
+
+# brew install fswatch
+watch:
+	fswatch spec conf.d | xargs -L1 make spec
 
 agent:
 	HOME=`pwd` ../logstash/bin/logstash --pluginpath lib -f conf.d -v
+
+cloudfront:
+	HOME=`pwd` cat import/cloudfront/esdump.json | ../logstash/bin/logstash --pluginpath lib -f conf.d --quiet
