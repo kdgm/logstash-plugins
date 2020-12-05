@@ -23,7 +23,8 @@ VODCDN_SESSION_SAMPLE = JSON.parse(<<JSON_DOC
       "bytes": 42048967,
       "duration": 23,
       "logsource": [
-        "AMS50-C1"
+        "AMS50-C1",
+        "AMS20-C2"
       ],
       "kbps": 14282,
       "hls": {
@@ -73,7 +74,7 @@ describe 'Cloudfront filter', if: RUBY_ENGINE == 'jruby' do
       insist { subject['referrer'] }     == 'https://kerkdienstgemist.nl/stations/1419/events/recording/160232040001419;https://kerkdienstgemist.nl/stations/1419-Test/events/recording/160232040001419'
       insist { subject['bytes'] }        == 42_048_967
       insist { subject['duration'] }     == 23
-      insist { subject['logsource'] }    == ['AMS50-C1']
+      insist { subject['logsource'] }    == 'AMS50-C1,AMS20-C2'
       insist { subject['kbps'] }         == 14_282
       insist { subject['hls'] }          == { 'playlist' => 1, 'chunklist' => 2, 'media' => 16 }
       insist { subject['count'] }        == 19
