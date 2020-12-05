@@ -1,4 +1,5 @@
 ## Release 2020-12-05-1714
+- [enh] switch to date tags for releases
 - [fix] join logsources into single string (with comma)
 - [fix] join referrer strings with semicolon (;) into single string
 - [add] message field containing Apache Common Log format representation of the session
