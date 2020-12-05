@@ -16,7 +16,8 @@ VODCDN_SESSION_SAMPLE = JSON.parse(<<JSON_DOC
       "response": "200",
       "agent": "AppleCoreMedia/1.0.0.16G201 (iPad; U; CPU OS 12_4_8 like Mac OS X; nl_nl)",
       "referrer": [
-        "https://kerkdienstgemist.nl/stations/1419/events/recording/160232040001419"
+        "https://kerkdienstgemist.nl/stations/1419/events/recording/160232040001419",
+        "https://kerkdienstgemist.nl/stations/1419-Test/events/recording/160232040001419"
       ],
       "session_id": "24.132.188.152#GET#/vodcdn/_definst_/mp4:amazons3/media.kerkdienstgemist.nl/90311151-v1520373/20201010085600_15620922-mp4.mp4#HTTP/2.0#200#1603671233000#1603671256000",
       "bytes": 42048967,
@@ -69,7 +70,7 @@ describe 'Cloudfront filter', if: RUBY_ENGINE == 'jruby' do
       insist { subject['protocol'] }     == 'HTTP/2.0'
       insist { subject['response'] }     == '200'
       insist { subject['agent'] }        == 'AppleCoreMedia/1.0.0.16G201 (iPad; U; CPU OS 12_4_8 like Mac OS X; nl_nl)'
-      insist { subject['referrer'] }     == ['https://kerkdienstgemist.nl/stations/1419/events/recording/160232040001419']
+      insist { subject['referrer'] }     == 'https://kerkdienstgemist.nl/stations/1419/events/recording/160232040001419;https://kerkdienstgemist.nl/stations/1419-Test/events/recording/160232040001419'
       insist { subject['bytes'] }        == 42_048_967
       insist { subject['duration'] }     == 23
       insist { subject['logsource'] }    == ['AMS50-C1']
@@ -85,7 +86,7 @@ describe 'Cloudfront filter', if: RUBY_ENGINE == 'jruby' do
 
       # adds a message field containing Apache Common Log format version of the log line
       insist { subject['message'] } == \
-        '24.132.188.152 - - [26/Oct/2020:01:14:16 +0100] "GET /vodcdn/_definst_/mp4:amazons3/media.kerkdienstgemist.nl/90311151-v1520373/20201010085600_15620922-mp4.mp4 HTTP/2.0" 200 42048967 "https://kerkdienstgemist.nl/stations/1419/events/recording/160232040001419" "AppleCoreMedia/1.0.0.16G201 (iPad; U; CPU OS 12_4_8 like Mac OS X; nl_nl)" 23 hls=1/2/16 count=19'
+        '24.132.188.152 - - [26/Oct/2020:01:14:16 +0100] "GET /vodcdn/_definst_/mp4:amazons3/media.kerkdienstgemist.nl/90311151-v1520373/20201010085600_15620922-mp4.mp4 HTTP/2.0" 200 42048967 "https://kerkdienstgemist.nl/stations/1419/events/recording/160232040001419;https://kerkdienstgemist.nl/stations/1419-Test/events/recording/160232040001419" "AppleCoreMedia/1.0.0.16G201 (iPad; U; CPU OS 12_4_8 like Mac OS X; nl_nl)" 23 hls=1/2/16 count=19'
       insist { subject['httpdate'] } == nil
 
       # httpversion from protocol
