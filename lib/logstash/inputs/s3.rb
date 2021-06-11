@@ -59,6 +59,9 @@ class LogStash::Inputs::S3 < LogStash::Inputs::Base
   # Value is in seconds.
   config :interval, :validate => :number, :default => 60
 
+  # Max number of files to fetch from S3 in one iteration
+  config :limit, :validate => :number, :default => 1000
+
   public
   def register
     require "digest/md5"
@@ -165,7 +168,7 @@ class LogStash::Inputs::S3 < LogStash::Inputs::Base
     end
 
     objects = {}
-    @s3bucket.objects.with_prefix(@prefix).each do |log|
+    @s3bucket.objects.with_prefix(@prefix).each(:limit => @limit) do |log|
       if log.last_modified > since
         objects[log.key] = log.last_modified
       end
