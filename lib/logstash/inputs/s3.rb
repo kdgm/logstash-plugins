@@ -157,7 +157,8 @@ class LogStash::Inputs::S3 < LogStash::Inputs::Base
         puts("#{Time.now} S3 input processing #{i} #{@bucket}/#{k}")
         lastmod = @s3bucket.objects[k].last_modified
         process_log(queue, k)
-        since = sincedb_write(lastmod)
+        sincedb_write(lastmod)
+        since = sincedb_read()
       end
     end
 
@@ -281,7 +282,6 @@ class LogStash::Inputs::S3 < LogStash::Inputs::Base
       since = Time.now()
     end
     File.open(@sincedb_path, 'w') { |file| file.write(since.to_s) }
-    since
   end # def sincedb_write
 
 end # class LogStash::Inputs::S3
