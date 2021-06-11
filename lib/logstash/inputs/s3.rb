@@ -151,8 +151,9 @@ class LogStash::Inputs::S3 < LogStash::Inputs::Base
     end
 
     objects = list_new(since)
-    objects.each do |k|
+    objects.each_with_index do |k, i|
       @logger.debug("S3 input processing", :bucket => @bucket, :key => k)
+      puts("#{Time.now} S3 input processing #{i} #{@bucket}/#{k}")
       lastmod = @s3bucket.objects[k].last_modified
       process_log(queue, k)
       sincedb_write(lastmod)
@@ -167,8 +168,10 @@ class LogStash::Inputs::S3 < LogStash::Inputs::Base
       since = Time.new(0)
     end
 
+    i = 0
     objects = {}
     @s3bucket.objects.with_prefix(@prefix).each(:limit => @limit) do |log|
+      puts "#{Time.now} #{i} #{log.key}"; i += 1
       if log.last_modified > since
         objects[log.key] = log.last_modified
       end
