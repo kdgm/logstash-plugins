@@ -59,6 +59,9 @@ class LogStash::Inputs::S3 < LogStash::Inputs::Base
   # Value is in seconds.
   config :interval, :validate => :number, :default => 60
 
+  # Max number of files to fetch from S3 in one iteration
+  config :limit, :validate => :number, :default => 1000
+
   public
   def register
     require "digest/md5"
@@ -147,12 +150,15 @@ class LogStash::Inputs::S3 < LogStash::Inputs::Base
         since = sincedb_read()
     end
 
-    objects = list_new(since)
-    objects.each do |k|
-      @logger.debug("S3 input processing", :bucket => @bucket, :key => k)
-      lastmod = @s3bucket.objects[k].last_modified
-      process_log(queue, k)
-      sincedb_write(lastmod)
+    while objects = list_new(since)
+      break if objects.empty?
+      objects.each_with_index do |k, i|
+        @logger.debug("S3 input processing", :bucket => @bucket, :key => k)
+        puts("#{Time.now} S3 input processing #{i} #{@bucket}/#{k}")
+        lastmod = @s3bucket.objects[k].last_modified
+        process_log(queue, k)
+        since = sincedb_write(lastmod)
+      end
     end
 
   end # def process_new
@@ -164,8 +170,10 @@ class LogStash::Inputs::S3 < LogStash::Inputs::Base
       since = Time.new(0)
     end
 
+    i = 0
     objects = {}
-    @s3bucket.objects.with_prefix(@prefix).each do |log|
+    @s3bucket.objects.with_prefix(@prefix).each(:limit => @limit) do |log|
+      puts "#{Time.now} #{i} #{log.key}"; i += 1
       if log.last_modified > since
         objects[log.key] = log.last_modified
       end
@@ -273,7 +281,7 @@ class LogStash::Inputs::S3 < LogStash::Inputs::Base
       since = Time.now()
     end
     File.open(@sincedb_path, 'w') { |file| file.write(since.to_s) }
-
+    since
   end # def sincedb_write
 
 end # class LogStash::Inputs::S3

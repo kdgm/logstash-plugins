@@ -1,3 +1,8 @@
+## Release 2021-06-11-1348
+Merge branch 'feature/fix/large-backlog-issues' into develop
+- [enh] if there are more objects available, keep going instead of waiting `interval` seconds
+- [fix] limit the number of objects returned to 1000 by default
+
 ## Release 2020-12-05-1714
 - [enh] switch to date tags for releases
 - [fix] join logsources into single string (with comma)
