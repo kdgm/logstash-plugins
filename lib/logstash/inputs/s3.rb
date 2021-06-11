@@ -150,13 +150,15 @@ class LogStash::Inputs::S3 < LogStash::Inputs::Base
         since = sincedb_read()
     end
 
-    objects = list_new(since)
-    objects.each_with_index do |k, i|
-      @logger.debug("S3 input processing", :bucket => @bucket, :key => k)
-      puts("#{Time.now} S3 input processing #{i} #{@bucket}/#{k}")
-      lastmod = @s3bucket.objects[k].last_modified
-      process_log(queue, k)
-      sincedb_write(lastmod)
+    while objects = list_new(since)
+      break if objects.empty?
+      objects.each_with_index do |k, i|
+        @logger.debug("S3 input processing", :bucket => @bucket, :key => k)
+        puts("#{Time.now} S3 input processing #{i} #{@bucket}/#{k}")
+        lastmod = @s3bucket.objects[k].last_modified
+        process_log(queue, k)
+        since = sincedb_write(lastmod)
+      end
     end
 
   end # def process_new
@@ -279,7 +281,7 @@ class LogStash::Inputs::S3 < LogStash::Inputs::Base
       since = Time.now()
     end
     File.open(@sincedb_path, 'w') { |file| file.write(since.to_s) }
-
+    since
   end # def sincedb_write
 
 end # class LogStash::Inputs::S3
