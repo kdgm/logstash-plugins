@@ -1,3 +1,6 @@
+## Release 2021-06-11-1435
+- [fix] don't use since from sincedb_write but reload from sincedb_read.
+
 ## Release 2021-06-11-1348
 Merge branch 'feature/fix/large-backlog-issues' into develop
 - [enh] if there are more objects available, keep going instead of waiting `interval` seconds
